@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import generalReducer from './generalSlice'
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     general: generalReducer,
   }

@@ -1,6 +1,6 @@
 import { ramadanMonth } from "./ramadanMonth";
 
-export const timestampGenerator = () =>
+export const calendarInitializer = () =>
   ramadanMonth.map((m) => ({
     ...m,
     timestamp: 1710018000000 + (m.day) * 86400000,
