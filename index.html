@@ -4,10 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>hedef</title>
   </head>
-  <body>
+  <body class="bg-neutral-800">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('paintWorklet' in CSS) {
+        CSS.paintWorklet.addModule(
+          'https://www.unpkg.com/css-houdini-squircle/squircle.min.js'
+        );
+      }
+    </script>
   </body>
 </html>

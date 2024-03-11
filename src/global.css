@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.squircle {
+  width: 200px;
+  height: 200px;
+  background: paint(squircle);
+  --squircle-smooth: 1;
+  --squircle-radius: 10px;
+  --squircle-fill: #f45;
+}
+
+@layer utilities {
+  .smoother {
+    @apply transition-all duration-100
+  }
+  .smoother-2 {
+    @apply transition-all duration-200
+  }
+  .smoother-3 {
+    @apply transition-all duration-300
+  }
+  .smoother-5 {
+    @apply transition-all duration-500
+  }
+  .smoother-i {
+    @apply transition-all duration-[2000ms]
+  }
+  .bg-lumen-0 {
+    @apply bg-white dark:bg-neutral-400
+  }
+  .bg-lumen-1 {
+    @apply bg-neutral-50 dark:bg-neutral-500
+  }
+  .bg-lumen-2 {
+    @apply bg-neutral-100 dark:bg-neutral-600
+  }
+  .bg-lumen-3 {
+    @apply bg-neutral-200 dark:bg-neutral-700
+  }
+  .bg-lumen-4 {
+    @apply bg-neutral-300 dark:bg-neutral-800
+  }
+  .bg-lumen-5 {
+    @apply bg-neutral-400 dark:bg-neutral-900
+  }
+  .text-lumen-0 {
+    @apply text-black dark:text-gray-100
+  }
+  .text-lumen-1 {
+    @apply text-gray-950 dark:text-gray-200
+  }
+  .text-lumen-2 {
+    @apply text-gray-800 dark:text-gray-300
+  }
+  .text-lumen-3 {
+    @apply text-gray-700 dark:text-gray-400
+  }
+  .text-lumen-4 {
+    @apply text-gray-600 dark:text-gray-500
+  }
+  .text-lumen-5 {
+    @apply text-gray-500 dark:text-gray-600
+  }
+  .text-lumen-6 {
+    @apply text-gray-400 dark:text-gray-700
+  }
+  .text-lumen-7 {
+    @apply text-gray-300 dark:text-gray-800
+  }
+  .text-lumen-8 {
+    @apply text-gray-200 dark:text-gray-900
+  }
+  .text-lumen-x {
+    @apply text-gray-900 dark:text-gray-300
+  }
+}
