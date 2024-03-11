@@ -36,7 +36,7 @@ export const generalSlice = createSlice({
       state.calendars.push(action.payload)
     },
     completeDaily: (state, action: PayloadAction<number>) => {
-      console.log('data: ', typeof state.calendars)
+      // console.log('data: ', typeof state.calendars)
       // const theDay = state.calendars[state.selectedCalendar].calendar.find(d => d.day === action.payload);
       // state.calendars[state.selectedCalendar].calendar = {...theDay, completed: "yes"}
       const calendarIndex = state.selectedCalendar;
@@ -45,11 +45,16 @@ export const generalSlice = createSlice({
       if (dayIndex !== -1) state.calendars[calendarIndex].calendar[dayIndex].completed = currentState !== "yes" ? "yes" : "no";
       localStorage.setItem("calendars", JSON.stringify(state.calendars))
     },
+    updateTitle: (state, action: PayloadAction<string>) => {
+      state.calendars[state.selectedCalendar].title = action.payload
+      localStorage.setItem("calendars", JSON.stringify(state.calendars))
+    },
   },
 })
 
 export const {
   addCalendar,
   completeDaily,
+  updateTitle,
 } = generalSlice.actions
 export default generalSlice.reducer
