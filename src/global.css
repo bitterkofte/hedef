@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,11 +9,12 @@
   height: 200px; */
   background: paint(squircle);
   --squircle-smooth: 1;
-  --squircle-radius: 10px;
+  --squircle-radius: 30px;
   --squircle-fill: #f59e0b;
 }
 body {
   line-height: 0.5 !important;
+  /* font-stretch: ultra-expanded; */
 }
 #my-calendar {
   line-height: normal;

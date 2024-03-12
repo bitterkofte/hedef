@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>hedef</title>
   </head>
-  <body class="bg-neutral-800">
+  <body class="bg-neutral-800 font-grotesque">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- <script>
+    <script>
       if ('paintWorklet' in CSS) {
         CSS.paintWorklet.addModule(
           'https://www.unpkg.com/css-houdini-squircle/squircle.min.js'
         );
       }
-    </script> -->
-    <script>
+    </script>
+    <!-- <script>
       (async function () {
         if (!("paintWorklet" in CSS)) {
           await import("css-paint-polyfill");
@@ -26,6 +26,6 @@
           `https://www.unpkg.com/css-houdini-squircle/squircle.min.js`
         );
       })();
-    </script>
+    </script> -->
   </body>
 </html>

@@ -15,6 +15,12 @@ export default {
           999: "#03200f",
         },
         gold: "#f59e0b",
+        "half-gold": "#f59f0b86",
+        "slight-gold": "#f59f0b3c",
+        "thin-gold": "#f59f0b1c",
+      },
+      fontFamily: {
+       grotesque : "Bricolage Grotesque"
       }
     },
   },
