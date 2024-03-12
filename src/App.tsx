@@ -58,7 +58,7 @@ function App() {
           {calendars[selectedCalendar].calendar.map((day) => (
             <button
               key={day.day}
-              className={`w-10 h-10 md:w-12 md:h-12 p-3 border-2 flex justify-center items-center rounded-full md:hover:border-green-600 md:hover:text-green-600 disabled:border-neutral-600 disabled:text-neutral-600 cursor-pointer disabled:cursor-default smoother-2 ${
+              className={`w-10 h-10 md:w-12 md:h-12 p-3 border-2 flex justify-center items-center rounded-full md:hover:border-green-600 md:hover:text-green-600 disabled:border-neutral-600 disabled:text-neutral-600 md:disabled:border-neutral-600 md:disabled:text-neutral-600 cursor-pointer disabled:cursor-default smoother-2 ${
                 day.completed === "yes" ? "border-green-600 text-green-600 hover:border-green-600 hover:text-green-600" : ""
               } ${(isToday(day.timestamp, currentTimestamp) && day.completed !== "yes") ? "border-gold text-gold" : "" }`}
               data-tooltip-id="date"

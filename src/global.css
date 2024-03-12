@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+.driver-popover {
+  font-family: "Bricolage Grotesque";
+  /* background: #cccccc; */
+  /* color: #f59e0b; */
+}
+.driver-popover-title {
+  font-family: "Bricolage Grotesque";
+  color: #f59e0b;
+}
+.driver-popover-description {
+  font-family: "Bricolage Grotesque";
+  /* color: #f59e0b; */
+}
+
 .squircle {
   /* width: 200px;
   height: 200px; */

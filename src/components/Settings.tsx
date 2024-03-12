@@ -41,7 +41,7 @@ export const Settings = () => {
         </button>
       </div>
 
-      <div className='bg-gold rounded-3xl'>
+      <div id="settings" className='bg-gold rounded-3xl'>
       <div className='p-2 squircle cursor-pointer' onClick={toggleSettings}>
         <HiOutlineCog8Tooth size={30} className={`z-10 smoother-3 ease-in-out ${isSettings ? "rotate-90" : "rotate-0"}`} />
       </div>
