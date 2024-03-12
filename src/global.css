@@ -84,8 +84,8 @@ body {
 }
 
 .sk-chase {
-  /* width: 40px; */
-  /* height: 40px; */
+  width: 10px;
+  height: 10px;
   position: relative;
   animation: sk-chase 2.5s infinite linear both;
 }

@@ -35,8 +35,8 @@ export const Settings = () => {
       <div className={`flex flex-col gap-3 rounded-lg overflow-hidden smoother-3 ease-in-out ${isSettings ? "max-h-10" : "max-h-0"}`}>
         {/* <ImportButton />
         <ExportButton /> */}
-        <button className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg" onClick={exportCalendarImage} disabled={isExporting}>
-          {!isExporting ? <Loading/> : <LuDownload/>}
+        <button className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700" onClick={exportCalendarImage} disabled={isExporting}>
+          {isExporting ? <Loading/> : <LuDownload/>}
           {isExporting ? 'Exporting...' : 'Export Calendar'}
         </button>
       </div>
