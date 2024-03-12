@@ -36,7 +36,7 @@ export const Settings = () => {
         {/* <ImportButton />
         <ExportButton /> */}
         <button className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg" onClick={exportCalendarImage} disabled={isExporting}>
-          {isExporting ? <Loading/> : <LuDownload/>}
+          {!isExporting ? <Loading/> : <LuDownload/>}
           {isExporting ? 'Exporting...' : 'Export Calendar'}
         </button>
       </div>

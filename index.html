@@ -9,12 +9,23 @@
   <body class="bg-neutral-800">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
+    <!-- <script>
       if ('paintWorklet' in CSS) {
         CSS.paintWorklet.addModule(
           'https://www.unpkg.com/css-houdini-squircle/squircle.min.js'
         );
       }
+    </script> -->
+    <script>
+      (async function () {
+        if (!("paintWorklet" in CSS)) {
+          await import("css-paint-polyfill");
+        }
+    
+        CSS.paintWorklet.addModule(
+          `https://www.unpkg.com/css-houdini-squircle/squircle.min.js`
+        );
+      })();
     </script>
   </body>
 </html>
