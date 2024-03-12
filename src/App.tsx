@@ -37,7 +37,7 @@ function App() {
         <img className='w-40 lg:w-72' src={Logo} alt='hedef' />
       </nav>
 
-      <div id="my-calendar" className="min-h-screen flex flex-col justify-center items-center gap-10 bg-neutral-800 text-white select-none">
+      <div id="my-calendar" className="min-h-screen pt-10 flex flex-col justify-center items-center gap-16 bg-neutral-800 text-white select-none">
         {/* <h2 className="text-2xl font-bold">{calendars[selectedCalendar].title}</h2> */}
         <input type='text' className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='' />
         <div className="px-5 sm:px-3 md:px-2 grid grid-cols-7 gap-3 md:gap-4">
@@ -52,7 +52,7 @@ function App() {
           {calendars[selectedCalendar].calendar.map((day) => (
             <button
               key={day.day}
-              className={`w-10 h-10 md:w-12 md:h-12 p-3 border-2 flex justify-center items-center rounded-full hover:border-green-600 hover:text-green-600 disabled:border-neutral-600 disabled:text-neutral-600 cursor-pointer disabled:cursor-default smoother-2 ${
+              className={`w-10 h-10 md:w-12 md:h-12 p-3 border-2 flex justify-center items-center rounded-full md:hover:border-green-600 md:hover:text-green-600 disabled:border-neutral-600 disabled:text-neutral-600 cursor-pointer disabled:cursor-default smoother-2 ${
                 day.completed === "yes" ? "border-green-600 text-green-600 hover:border-green-600 hover:text-green-600" : ""
               } ${(isToday(day.timestamp, currentTimestamp) && day.completed !== "yes") ? "border-gold text-gold" : "" }`}
               data-tooltip-id="date"
