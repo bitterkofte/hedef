@@ -5,6 +5,10 @@ import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import { completeDaily, updateTitle } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
 import Logo from '../public/hedef.svg'
+import { homeGuide } from "./utils/guides";
+import { IoInformationSharp } from "react-icons/io5";
+import "driver.js/dist/driver.css";
+
 
 function App() {
   // const [calendar, setCalendar] = useState(calendarInitializer());
@@ -26,6 +30,8 @@ function App() {
     dispatch(completeDaily(day));
   };
 
+  // homeGuide.drive();
+
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
@@ -39,8 +45,8 @@ function App() {
 
       <div id="my-calendar" className="min-h-screen pt-10 flex flex-col justify-center items-center gap-16 bg-neutral-800 text-white select-none">
         {/* <h2 className="text-2xl font-bold">{calendars[selectedCalendar].title}</h2> */}
-        <input type='text' className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='' />
-        <div className="px-5 sm:px-3 md:px-2 grid grid-cols-7 gap-3 md:gap-4">
+        <input type='text' id="task-title" className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='' />
+        <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-7 gap-3 md:gap-4">
           {days.map((d) => (
               <div key={d} className="border-0 text-neutral-500 text-xs text-center font-grotesque">{ d.slice(0,3) }</div>
           ))}
@@ -84,16 +90,24 @@ function App() {
         </div>
       </div>
 
+      <div className='fixed z-10 left-3 bottom-3 p-2 squircle cursor-pointer' onClick={() => homeGuide.drive()}>
+        <IoInformationSharp size={30}/>
+      </div>
       <Settings/>
 
       <footer className="w-full py-3 fixed bottom-0 text-center select-none">
         <a
+          id="github"
           href="https://github.com/bitterkofte/hedef"
           className="text-lg font- text-neutral-600  hover:text-gold smoother-5 cursor-pointer"
           target="_blank"
+          data-tooltip-id="github"
+          data-tooltip-content="Give me a ⭐"
+          data-tooltip-place="top"
         >
           by bitterkofte
         </a>
+        <Tooltip id="github" style={{ background: "#0a2a63", padding: 15 }} />
       </footer>
     </>
   );
