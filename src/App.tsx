@@ -9,16 +9,15 @@ import { homeGuide } from "./utils/guides";
 import { IoInformationSharp } from "react-icons/io5";
 import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
+import { useHorizontalScroll } from "./hooks/useHorizontalScroll";
 
 
 function App() {
-  // const [calendar, setCalendar] = useState(calendarInitializer());
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
   const { calendars, selectedCalendar } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
-  // const [count, setCount] = useState(0);
+  const scrollHorRef = useHorizontalScroll();
   
-
   useEffect(() => {
     const intervalId = setInterval(
       () => setCurrentTimestamp(Date.now()),
@@ -45,13 +44,13 @@ function App() {
       </nav>
 
       <div id="my-calendar" className=" pt-2 mb-20 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none">
-        <div className='flex items-center bg-neutral-750 self-start w-full'>
+        <div ref={scrollHorRef} className='w-full overflow-x-auto flex items-center gap-3 bg-neutral-750 self-start'>
           {calendars.map((c,i) => (
-            <div key={c.id} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} px-2 py-1 w-fit border-x-4 border-black text-sm text-black smoother-3 cursor-pointer`}>
+            <div key={c.id} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} flex-none px-2 py-1 text-sm text-black smoother-3 cursor-pointer`}>
               { c.title }
             </div>
           ))}
-          <IoIosAddCircleOutline className="ml-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer" size={20} onClick={() => dispatch(addCalendar())}/>
+          <IoIosAddCircleOutline className="flex-none mr-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer" size={20} onClick={() => dispatch(addCalendar())}/>
         </div>
         <div className='flex flex-col items-center gap-3'>
           <input type='text' id="task-title" className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='Goal' maxLength={20} />

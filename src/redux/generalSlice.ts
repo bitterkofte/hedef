@@ -36,7 +36,7 @@ export const generalSlice = createSlice({
   initialState,
   reducers: {
     addCalendar: (state) => {
-      if (state.calendars.length < 5){
+      if (state.calendars.length < 10){
         state.calendars.push({
           id: Date.now(),
           title: "Your Goal",
@@ -47,7 +47,7 @@ export const generalSlice = createSlice({
         localStorage.setItem("calendars", JSON.stringify(state.calendars))
         localStorage.setItem("settings", JSON.stringify({selectedCalendar: state.calendars.length-1}))
       }
-      else toast.error("You cant add more than 5 goals 😥")
+      else toast.error("You cant add more than 10 goals 😥")
     },
     setSelectedCalendar: (state, action: PayloadAction<number>) => {
       state.selectedCalendar = action.payload;
@@ -71,6 +71,14 @@ export const generalSlice = createSlice({
       state.calendars[state.selectedCalendar].description = action.payload
       localStorage.setItem("calendars", JSON.stringify(state.calendars))
     },
+    deleteCalendar: (state) => {
+      if (state.calendars.length > 1) {
+        state.calendars = state.calendars.filter((_, i) => i !== state.selectedCalendar)
+        state.selectedCalendar = 0;
+        localStorage.setItem("calendars", JSON.stringify(state.calendars))
+        localStorage.setItem("settings", JSON.stringify({selectedCalendar: 0}))
+      } else toast.error("You cannot delete all calendars")
+    },
     toggleDayZero: (state) => {
       const isDayZero = !!state.calendars[state.selectedCalendar].calendar.find(d => d.day === 0)
       if (isDayZero) state.calendars[state.selectedCalendar].calendar = state.calendars[state.selectedCalendar].calendar.filter(d => d.day !== 0)
@@ -78,7 +86,7 @@ export const generalSlice = createSlice({
         {
           day: 0,
           completed: "not yet",
-          timestamp: 0
+          timestamp: 1710028800000
         },
         ...state.calendars[state.selectedCalendar].calendar
       ]
@@ -93,6 +101,7 @@ export const {
   completeDaily,
   updateTitle,
   updateDescription,
+  deleteCalendar,
   toggleDayZero,
 } = generalSlice.actions
 export default generalSlice.reducer

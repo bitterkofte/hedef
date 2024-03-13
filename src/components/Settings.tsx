@@ -8,8 +8,9 @@ import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import { Loading } from "./Loading";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { toggleDayZero } from "../redux/generalSlice";
+import { deleteCalendar, toggleDayZero } from "../redux/generalSlice";
 import { IoIosAddCircleOutline } from "react-icons/io";
+import { IoTrashOutline } from "react-icons/io5";
 
 export const Settings = () => {
   const [isSettings, setIsSettings] = useState<boolean>(false);
@@ -45,11 +46,18 @@ export const Settings = () => {
     >
       <div
         className={`flex flex-col gap-3 rounded-lg overflow-hidden smoother-3 ease-in-out ${
-          isSettings ? "max-h-32" : "max-h-0"
+          isSettings ? "max-h-40" : "max-h-0"
         }`}
       >
         {/* <ImportButton />
         <ExportButton /> */}
+        <button
+          className="p-3 flex items-center gap-2 text-white bg-red-800 hover:bg-red-700 smoother-2 rounded-lg disabled:bg-neutral-700"
+          onClick={() => dispatch(deleteCalendar())}
+        >
+          <IoTrashOutline size={20} className={`smoother-3`} />
+          <span>Delete calendar</span>
+        </button>
         <button
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
           onClick={() => dispatch(toggleDayZero())}
