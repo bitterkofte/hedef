@@ -7,19 +7,23 @@ import { useClickOutside } from "../hooks/useClickOutside";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import { Loading } from "./Loading";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { toggleDayZero } from "../redux/generalSlice";
+import { IoIosAddCircleOutline } from "react-icons/io";
 
 export const Settings = () => {
   const [isSettings, setIsSettings] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const { calendars, selectedCalendar } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
 
   useClickOutside({
     ref: settingsRef,
     handler: () => setIsSettings(false),
   });
+
+  const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
 
   const exportCalendarImage = async () => {
     setIsExporting(true);
@@ -50,7 +54,8 @@ export const Settings = () => {
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
           onClick={() => dispatch(toggleDayZero())}
         >
-          Exclude the day 0
+          <IoIosAddCircleOutline size={20} className={`smoother-3 ${isDayZero ? "rotate-45" : "rotate-0"}`} />
+          {isDayZero ? "Exclude the day 0" : " Include the day 0"}
         </button>
         <button
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
