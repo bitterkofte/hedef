@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { dateFormatter, isToday } from "./utils/functions";
 import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
-import { completeDaily, updateTitle } from "./redux/generalSlice";
+import { addCalendar, completeDaily, setSelectedCalendar, updateDescription, updateTitle } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
-import Logo from '../public/hedef.svg'
+import Logo from './assets/hedef.svg'
 import { homeGuide } from "./utils/guides";
 import { IoInformationSharp } from "react-icons/io5";
 import "driver.js/dist/driver.css";
+import { IoIosAddCircleOutline } from "react-icons/io";
 
 
 function App() {
@@ -30,27 +31,37 @@ function App() {
     dispatch(completeDaily(day));
   };
 
-  // homeGuide.drive();
+  const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
+  // useEffect(() => {
+  //   const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
+  // }, [])
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
     <>
-      <nav className="w-full py-7 fixed top-0 flex justify-center items-center bg-neutral-7500 select-none">
-        {/* <h1 className="text-4xl font-extrabold tracking-wider text-gold">
-          hedef
-        </h1> */}
-        <img className='w-40 lg:w-72' src={Logo} alt='hedef' />
+      <nav className="w-full flex justify-center items-center bg-neutral-7500 select-none">
+        <img className='w-40 lg:w-72 py-7' src={Logo} alt='hedef' />
       </nav>
 
-      <div id="my-calendar" className="min-h-screen pt-10 flex flex-col justify-center items-center gap-16 bg-neutral-800 text-white select-none">
-        {/* <h2 className="text-2xl font-bold">{calendars[selectedCalendar].title}</h2> */}
-        <input type='text' id="task-title" className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='' />
+      <div id="my-calendar" className=" pt-2 mb-20 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none">
+        <div className='flex items-center bg-neutral-750 self-start w-full'>
+          {calendars.map((c,i) => (
+            <div key={c.id} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} px-2 py-1 w-fit border-x-4 border-black text-sm text-black smoother-3 cursor-pointer`}>
+              { c.title }
+            </div>
+          ))}
+          <IoIosAddCircleOutline className="ml-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer" size={20} onClick={() => dispatch(addCalendar())}/>
+        </div>
+        <div className='flex flex-col items-center gap-3'>
+          <input type='text' id="task-title" className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='Goal' maxLength={20} />
+          <input type='text' id="task-desc" className='w-fit bg-transparent text-sm font-light text-center opacity-30 outline-none' value={calendars[selectedCalendar].description || ""} onChange={(e) => dispatch(updateDescription(e.target.value))} placeholder='description' maxLength={20} />
+        </div>
         <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-7 gap-3 md:gap-4">
           {days.map((d) => (
               <div key={d} className="border-0 text-neutral-500 text-xs text-center font-grotesque">{ d.slice(0,3) }</div>
           ))}
-          {Array(6)
+          {isDayZero && Array(6)
             .fill(0)
             .map((_, i) => (
               <div key={i} className="p-3 border-0"></div>
@@ -99,7 +110,7 @@ function App() {
         <a
           id="github"
           href="https://github.com/bitterkofte/hedef"
-          className="text-lg font- text-neutral-600  hover:text-gold smoother-5 cursor-pointer"
+          className="p-2 text-lg text-neutral-600  hover:text-gold smoother-5 cursor-pointer"
           target="_blank"
           data-tooltip-id="github"
           data-tooltip-content="Give me a ⭐"

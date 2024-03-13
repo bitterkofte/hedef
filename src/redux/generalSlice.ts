@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { calendarInitializer } from '../utils/functions'
 import { RamadanMonth } from '../utils/ramadanMonth'
+import { toast } from 'sonner'
 
 export type CalendarType = {
   id: number
@@ -15,25 +16,42 @@ export interface GeneralStateType {
   selectedCalendar: number
 }
 
-const initialCalendar: CalendarType[] = [{
+const initialCalendar: CalendarType = {
   id: 0,
-  title: "Teravih",
+  title: "Your Goal",
   calendar: calendarInitializer(),
   color: "#eeeeee"
-}];
-const localCalendar: CalendarType[] = localStorage.getItem("calendars") ? JSON.parse(localStorage.getItem("calendars") as string) : initialCalendar;
-if(!localStorage.getItem("calendars")) localStorage.setItem("calendars", JSON.stringify(initialCalendar))
+};
+const localCalendar: CalendarType[] = localStorage.getItem("calendars") ? JSON.parse(localStorage.getItem("calendars") as string) : [initialCalendar];
+const localSelectedCalendar = localStorage.getItem("settings") ? JSON.parse(localStorage.getItem("settings") as string).selectedCalendar : 0;
+if(!localStorage.getItem("calendars")) localStorage.setItem("calendars", JSON.stringify([initialCalendar]))
+if(!localStorage.getItem("settings")) localStorage.setItem("settings", JSON.stringify({selectedCalendar: 0}))
 
 const initialState: GeneralStateType = {
   calendars: localCalendar,
-  selectedCalendar: 0,
+  selectedCalendar: localSelectedCalendar,
 }
 export const generalSlice = createSlice({
   name: 'general',
   initialState,
   reducers: {
-    addCalendar: (state, action: PayloadAction<CalendarType>) => {
-      state.calendars.push(action.payload)
+    addCalendar: (state) => {
+      if (state.calendars.length < 5){
+        state.calendars.push({
+          id: Date.now(),
+          title: "Your Goal",
+          calendar: calendarInitializer(),
+          color: "#eeeeee"
+        });
+        state.selectedCalendar = state.calendars.length-1;
+        localStorage.setItem("calendars", JSON.stringify(state.calendars))
+        localStorage.setItem("settings", JSON.stringify({selectedCalendar: state.calendars.length-1}))
+      }
+      else toast.error("You cant add more than 5 goals 😥")
+    },
+    setSelectedCalendar: (state, action: PayloadAction<number>) => {
+      state.selectedCalendar = action.payload;
+      localStorage.setItem("settings", JSON.stringify({selectedCalendar: action.payload}))
     },
     completeDaily: (state, action: PayloadAction<number>) => {
       // console.log('data: ', typeof state.calendars)
@@ -49,12 +67,32 @@ export const generalSlice = createSlice({
       state.calendars[state.selectedCalendar].title = action.payload
       localStorage.setItem("calendars", JSON.stringify(state.calendars))
     },
+    updateDescription: (state, action: PayloadAction<string>) => {
+      state.calendars[state.selectedCalendar].description = action.payload
+      localStorage.setItem("calendars", JSON.stringify(state.calendars))
+    },
+    toggleDayZero: (state) => {
+      const isDayZero = !!state.calendars[state.selectedCalendar].calendar.find(d => d.day === 0)
+      if (isDayZero) state.calendars[state.selectedCalendar].calendar = state.calendars[state.selectedCalendar].calendar.filter(d => d.day !== 0)
+      else state.calendars[state.selectedCalendar].calendar = [
+        {
+          day: 0,
+          completed: "not yet",
+          timestamp: 0
+        },
+        ...state.calendars[state.selectedCalendar].calendar
+      ]
+      localStorage.setItem("calendars", JSON.stringify(state.calendars))
+    },
   },
 })
 
 export const {
   addCalendar,
+  setSelectedCalendar,
   completeDaily,
   updateTitle,
+  updateDescription,
+  toggleDayZero,
 } = generalSlice.actions
 export default generalSlice.reducer

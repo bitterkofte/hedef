@@ -5,11 +5,11 @@ export interface RamadanMonth {
  }
 
 export const ramadanMonth: RamadanMonth[] = [
-  {
-    day: 0,
-    completed: "not yet",
-    timestamp: 0
-  },
+  // {
+  //   day: 0,
+  //   completed: "not yet",
+  //   timestamp: 0
+  // },
   {
     day: 1,
     completed: "not yet",
