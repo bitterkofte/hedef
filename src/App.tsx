@@ -43,16 +43,16 @@ function App() {
         <img className='w-40 lg:w-72 py-7' src={Logo} alt='hedef' />
       </nav>
 
-      <div id="my-calendar" className="pt-2 mb-20 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none">
-        <div ref={scrollHorRef} className='w-full overflow-x-auto flex items-center gap-3 bg-neutral-750 self-start'>
+      <div id="my-calendar" className="pt-2 pb-10 mb-10 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none">
+        <div id="tabs" ref={scrollHorRef} className='w-full overflow-x-auto flex items-center gap-3 bg-neutral-750 self-start'>
           {calendars.map((c,i) => (
             <div key={c.id} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} flex-none px-2 py-1 text-sm text-black smoother-3 cursor-pointer`}>
-              { c.title }
+              { c.title === "" ? "-undefined-" : c.title }
             </div>
           ))}
           <IoIosAddCircleOutline className="flex-none mr-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer" size={20} onClick={() => dispatch(addCalendar())}/>
         </div>
-        <div className='flex flex-col items-center gap-3 d-sm:mt-28'>
+        <div className='flex flex-col items-center gap-3 d-sm:mt-16'>
           <input type='text' id="task-title" className='w-fit bg-transparent text-2xl font-bold text-center outline-none' value={calendars[selectedCalendar].title} onChange={(e) => dispatch(updateTitle(e.target.value))} placeholder='Goal' maxLength={20} />
           <input type='text' id="task-desc" className='w-fit bg-transparent text-sm font-light text-center opacity-30 outline-none' value={calendars[selectedCalendar].description || ""} onChange={(e) => dispatch(updateDescription(e.target.value))} placeholder='description' maxLength={20} />
         </div>
