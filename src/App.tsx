@@ -37,7 +37,7 @@ function App() {
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const deleteSelected = (e: MouseEvent, i: number) => {
+  const deleteSelected = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, i: number) => {
     if (e.button === 1) dispatch(deleteSelectedCalendar(i))
   }
 
