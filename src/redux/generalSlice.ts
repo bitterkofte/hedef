@@ -79,6 +79,16 @@ export const generalSlice = createSlice({
         localStorage.setItem("settings", JSON.stringify({selectedCalendar: 0}))
       } else toast.error("You cannot delete all calendars")
     },
+    deleteSelectedCalendar: (state, action: PayloadAction<number>) => {
+      const wheeled = action.payload;
+      if (state.calendars.length > 1) {
+        state.calendars = state.calendars.filter((_, i) => i !== wheeled)
+        localStorage.setItem("calendars", JSON.stringify(state.calendars))
+        if ((state.selectedCalendar === wheeled && state.selectedCalendar === 0) || state.selectedCalendar < wheeled) return
+        state.selectedCalendar = state.selectedCalendar-1;
+        localStorage.setItem("settings", JSON.stringify({selectedCalendar: state.selectedCalendar}))
+      } else toast.error("You cannot delete all calendars")
+    },
     toggleDayZero: (state) => {
       const isDayZero = !!state.calendars[state.selectedCalendar].calendar.find(d => d.day === 0)
       if (isDayZero) state.calendars[state.selectedCalendar].calendar = state.calendars[state.selectedCalendar].calendar.filter(d => d.day !== 0)
@@ -102,6 +112,7 @@ export const {
   updateTitle,
   updateDescription,
   deleteCalendar,
+  deleteSelectedCalendar,
   toggleDayZero,
 } = generalSlice.actions
 export default generalSlice.reducer

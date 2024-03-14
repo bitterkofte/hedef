@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { dateFormatter, isToday } from "./utils/functions";
 import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
-import { addCalendar, completeDaily, setSelectedCalendar, updateDescription, updateTitle } from "./redux/generalSlice";
+import { addCalendar, completeDaily, deleteSelectedCalendar, setSelectedCalendar, updateDescription, updateTitle } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
 import Logo from './assets/hedef.svg'
 import { homeGuide } from "./utils/guides";
@@ -37,6 +37,10 @@ function App() {
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+  const deleteSelected = (e: MouseEvent, i: number) => {
+    if (e.button === 1) dispatch(deleteSelectedCalendar(i))
+  }
+
   return (
     <>
       <nav className="w-full flex justify-center items-center bg-neutral-7500 select-none">
@@ -46,7 +50,7 @@ function App() {
       <div id="my-calendar" className="pt-2 pb-10 mb-10 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none">
         <div id="tabs" ref={scrollHorRef} className='w-full overflow-x-auto flex items-center gap-3 bg-neutral-750 self-start'>
           {calendars.map((c,i) => (
-            <div key={c.id} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} flex-none px-2 py-1 text-sm text-black smoother-3 cursor-pointer`}>
+            <div id={"tab-"+i} key={c.id} onAuxClick={(e) => deleteSelected(e, i)} onClick={() => dispatch(setSelectedCalendar(i))} className={`${i === selectedCalendar ? "bg-gold opacity-100" : "bg-white opacity-25 hover:opacity-100"} flex-none px-2 py-1 text-sm text-black smoother-3 cursor-pointer`}>
               { c.title === "" ? "-undefined-" : c.title }
             </div>
           ))}
