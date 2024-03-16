@@ -64,7 +64,35 @@ export const generalSlice = createSlice({
       localStorage.setItem("calendars", JSON.stringify(state.calendars))
     },
     updateTitle: (state, action: PayloadAction<string>) => {
+      // const selectedCal = state.calendars[state.selectedCalendar].calendar;
+      const day0 = state.calendars[state.selectedCalendar].calendar.find(d => d.day === 0)
+      const day30 = state.calendars[state.selectedCalendar].calendar.find(d => d.day === 30)
+      const isTeravih = day0 && !day30
+
       state.calendars[state.selectedCalendar].title = action.payload
+      const incTer = action.payload.toLowerCase().includes("teravih")
+
+      if (incTer && !isTeravih) {
+        state.calendars[state.selectedCalendar].calendar = [
+          {
+            day: 0,
+            completed: "not yet",
+            timestamp: 1710028800000
+          },
+          ...state.calendars[state.selectedCalendar].calendar
+        ]
+        state.calendars[state.selectedCalendar].calendar = state.calendars[state.selectedCalendar].calendar.filter(d => d.day !== 30)
+      }
+      if (!incTer && isTeravih) {
+        state.calendars[state.selectedCalendar].calendar = state.calendars[state.selectedCalendar].calendar.filter(d => d.day !== 0)
+        state.calendars[state.selectedCalendar].calendar.push(
+          {
+            day: 30,
+            completed: "not yet",
+            timestamp: 1712610000000
+          }
+        )
+      }
       localStorage.setItem("calendars", JSON.stringify(state.calendars))
     },
     updateDescription: (state, action: PayloadAction<string>) => {
