@@ -8,15 +8,15 @@ import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import { Loading } from "./Loading";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { deleteCalendar, toggleDayZero } from "../redux/generalSlice";
+import { deleteCalendar, toggleDayZero, togglePastLocked } from "../redux/generalSlice";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { IoTrashOutline } from "react-icons/io5";
+import { IoLockClosedOutline, IoLockOpenOutline, IoTrashOutline } from "react-icons/io5";
 
-export const Settings = () => {
+export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean) => void }) => {
   const [isSettings, setIsSettings] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const { calendars, selectedCalendar } = useAppSelector((s) => s.general);
+  const { calendars, selectedCalendar, isPastLocked } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
 
   useClickOutside({
@@ -44,27 +44,35 @@ export const Settings = () => {
       ref={settingsRef}
       className="fixed z-10 right-3 bottom-3 flex flex-col gap-3 items-end"
     >
+      
       <div
         className={`flex flex-col gap-3 rounded-lg overflow-hidden smoother-3 ease-in-out ${
-          isSettings ? "max-h-40" : "max-h-0"
+          isSettings ? "max-h-60" : "max-h-0"
         }`}
       >
         {/* <ImportButton />
         <ExportButton /> */}
         <button
+          className={`p-3 flex items-center gap-2 text-white smoother-2 rounded-lg disabled:bg-neutral-700 ${isPastLocked ? "bg-amber-600 hover:bg-amber-500" : "bg-green-800 hover:bg-green-700"}`}
+          onClick={() => dispatch(togglePastLocked())}
+        >
+          {isPastLocked ? <IoLockClosedOutline size={20} className={`smoother-3`} /> : <IoLockOpenOutline size={20} className={`smoother-3`} />}
+          <span>Past {isPastLocked ? "Locked" : "Unlocked"}</span>
+        </button>
+        <button
           className="p-3 flex items-center gap-2 text-white bg-red-800 hover:bg-red-700 smoother-2 rounded-lg disabled:bg-neutral-700"
-          onClick={() => dispatch(deleteCalendar())}
+          onClick={() => setIsModalVisible(true)}
         >
           <IoTrashOutline size={20} className={`smoother-3`} />
           <span>Delete calendar</span>
         </button>
-        <button
+        {/* <button
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
           onClick={() => dispatch(toggleDayZero())}
         >
           <IoIosAddCircleOutline size={20} className={`smoother-3 ${isDayZero ? "rotate-45" : "rotate-0"}`} />
           {isDayZero ? "Exclude the day 0" : " Include the day 0"}
-        </button>
+        </button> */}
         <button
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
           onClick={exportCalendarImage}
