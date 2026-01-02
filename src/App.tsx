@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  dateFormatter,
-  isToday,
-  LocalStorageCorrection,
-} from "./utils/functions";
+import { dateFormatter, isToday } from "./utils/functions";
 import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import {
@@ -14,28 +10,29 @@ import {
   toggleView,
   updateDescription,
   updateTitle,
+  setACM,
 } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
+import { AddCalendarModal } from "./components/AddCalendarModal";
 import Logo from "./assets/hedef.svg";
-import { homeGuide } from "./utils/guides";
-import { IoInformationSharp } from "react-icons/io5";
 import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { useHorizontalScroll } from "./hooks/useHorizontalScroll";
 import { MdOutlineGridView, MdOutlineViewCompact } from "react-icons/md";
+import Footer from "./components/Footer";
+import InfoGraph from "./components/InfoGraph";
+import { days } from "./utils/data";
 
 function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
-  const { calendars, selectedCalendar, isPastLocked, view } = useAppSelector(
+  const { calendars, selectedCalendar, isPastLocked, view, ACM, hType, hFormat } = useAppSelector(
     (s) => s.general
   );
   const dispatch = useAppDispatch();
   const scrollHorRef = useHorizontalScroll();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  // const [toggleView, setToggleView] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
-    LocalStorageCorrection();
     const intervalId = setInterval(
       () => setCurrentTimestamp(Date.now()),
       10000
@@ -54,6 +51,10 @@ function App() {
     // dispatch(deleteSelectedCalendar(i));
   };
 
+  // const addCalendarHandler = () => {
+  //   dispatch(setACM(true));
+  // };
+
   // const isDayZero = !!calendars[selectedCalendar].calendar.find(
   //   (d) => d.day === 0
   // );
@@ -62,22 +63,12 @@ function App() {
   //   const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
   // }, [])
 
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
-  const deleteSelected = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    i: number
-  ) => {
-    if (e.button === 1) dispatch(deleteSelectedCalendar(i));
-  };
+  // const deleteSelected = (
+  //   e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  //   i: number
+  // ) => {
+  //   if (e.button === 1) dispatch(deleteSelectedCalendar(i));
+  // };
 
   return (
     <>
@@ -108,7 +99,7 @@ function App() {
         </div>
       )}
 
-      {/* SECTION HEADER */}
+      {/* HEADER {#989898} */}
       <nav className="w-full px-10 flex justify-between items-center text-gold bg-neutral-7500 select-none">
         <button
           className="cursor-pointer text-4xl"
@@ -128,7 +119,7 @@ function App() {
         id="my-calendar"
         className="pt-2 pb-10 mb-10 flex flex-col justify-center items-center gap-8 bg-neutral-800 text-white select-none"
       >
-        {/* SECTION TABS */}
+        {/* TABS {#08c9ff} */}
         <div
           id="tabs"
           ref={scrollHorRef}
@@ -139,7 +130,7 @@ function App() {
               id={"tab-" + i}
               key={c.id}
               // onMouseDown={(e) => e.button === 1 && deleteSelected(e, i)}
-              onMouseDown={(e) => e.button === 1 && deleteHandler(i)}
+              onMouseDown={(e) => e.button === 1 && deleteHandler(i)} //basılı tutma penceresi
               onClick={() => dispatch(setSelectedCalendar(i))}
               className={`${
                 i === selectedCalendar
@@ -153,11 +144,17 @@ function App() {
           <IoIosAddCircleOutline
             className="flex-none mr-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer"
             size={20}
-            onClick={() => dispatch(addCalendar())}
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(setACM(true));
+            }}
           />
+          {/* <div className='absolute p-5 bg-lime-600 z-50'>
+            
+          </div> */}
         </div>
 
-        {/* SECTION TITLE & DESC */}
+        {/* TITLE & DESC {#fbfd6e} */}
         <div className="flex flex-col items-center gap-3 d-sm:mt-16?">
           <input
             type="text"
@@ -184,9 +181,9 @@ function App() {
           </p>
         </div>
 
-        {/* SECTION CALENDAR */}
+        {/* GRID VIEW {#b300ff, 95} */}
         {view === "grid" && (
-          <div className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, monthIndex) => {
               const currentCalendarData = calendars[selectedCalendar].calendar;
               const monthDays = currentCalendarData.filter(
@@ -231,6 +228,7 @@ function App() {
                     {monthDays.map((day) => (
                       <button
                         key={day.day}
+                        id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
                         className={`w-8 h-8 text-xs p-1 border flex justify-center items-center rounded-full  disabled:border-neutral-600 disabled:text-neutral-600 md:disabled:border-neutral-600 md:disabled:text-neutral-600 disabled:cursor-default smoother-2 
                         ${
                           isPastLocked &&
@@ -276,17 +274,18 @@ function App() {
                 </div>
               );
             })}
-            <Tooltip id="date" />
-            {/* <Tooltip id="bayram" style={{ background: "#581c87" }} /> */}
+            <Tooltip id="date" border="1px solid #8c6000" style={{ borderRadius: 9 }}/>
           </div>
         )}
 
-        {/* SECTION LIST */}
+        {/* LIST VIEW {#b300ff} */}
         {/* <div className="flex flex-wrap gap-3 md:px-20 px-5"> */}
-        <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-3 md:px-20 px-5">
-          {view === "list" &&
-            calendars[selectedCalendar].calendar.map((day) => (
+        {view === "list" && (
+          <div id="calendar" className="w-full grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-3 md:px-20 px-5">
+            {calendars[selectedCalendar].calendar.map((day) => (
               <button
+              key={day.day}
+              id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
                 className={`w-8 h-8 text-xs p-1 border flex justify-center items-center rounded-full  disabled:border-neutral-600 disabled:text-neutral-600 md:disabled:border-neutral-600 md:disabled:text-neutral-600 disabled:cursor-default smoother-2 
                         ${
                           isPastLocked &&
@@ -328,32 +327,15 @@ function App() {
                 {day.day}
               </button>
             ))}
-          <Tooltip id="date" />
-        </div>
+            <Tooltip id="date" border="1px solid #8c6000" style={{ borderRadius: 9 }} />
+          </div>
+        )}
       </div>
 
-      <div
-        className="fixed z-10 left-3 bottom-3 p-2 squircle cursor-pointer"
-        onClick={() => homeGuide.drive()}
-      >
-        <IoInformationSharp size={30} />
-      </div>
+      <AddCalendarModal />
       <Settings setIsModalVisible={setIsModalVisible} />
-
-      <footer className="w-full py-3 fixed bottom-0 text-center select-none">
-        <a
-          id="github"
-          href="https://github.com/bitterkofte/hedef"
-          className="p-2 text-lg text-neutral-600  hover:text-gold bg-neutral-500/10 hover:bg-amber-400/10 smoother-5 cursor-pointer backdrop-blur-sm rounded-full"
-          target="_blank"
-          data-tooltip-id="github"
-          data-tooltip-content="Give me a ⭐"
-          data-tooltip-place="top"
-        >
-          by bitterkofte
-        </a>
-        <Tooltip id="github" style={{ background: "#8c6000", padding: 15 }} />
-      </footer>
+      <InfoGraph />
+      <Footer />
     </>
   );
 }

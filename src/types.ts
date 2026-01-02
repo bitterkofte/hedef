@@ -12,9 +12,18 @@ export type CalendarType = {
   description?: string;
   calendar: Months[];
   color: string;
+  habitType: "daily" | "weekly";
+  habitFormat: "check" | "number" | "time";
 };
 export interface SettingsType {
   selectedCalendar: number;
   isPastLocked: boolean;
   view: "grid" | "list";
+  version: number;
 }
+
+// export type ACM = {
+//   isACMVisible: boolean;
+//   hType: "daily" | "weekly";
+//   hFormat: "check" | "number" | "time";
+// };

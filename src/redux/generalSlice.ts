@@ -4,10 +4,13 @@ import {
   calendarInitializer,
   initialCalendar,
   localSetItem,
+  LocalStorageCorrection,
 } from "../utils/functions";
 // import { RamadanMonth } from "../utils/ramadanMonth";
 import { toast } from "sonner";
-import { CalendarType, SettingsType } from "../types";
+import { CalendarType } from "../types";
+
+LocalStorageCorrection();
 
 // export const initialCalendar: CalendarType = {
 //   id: 0,
@@ -25,6 +28,9 @@ export interface GeneralStateType {
   selectedCalendar: number;
   isPastLocked: boolean;
   view: "grid" | "list";
+  ACM: boolean;
+  hType: "daily" | "weekly";
+  hFormat: "check" | "number" | "time";
 }
 
 const initialState: GeneralStateType = {
@@ -36,6 +42,9 @@ const initialState: GeneralStateType = {
   isPastLocked:
     JSON.parse(localStorage.getItem("settings") || "{}").isPastLocked ?? true,
   view: JSON.parse(localStorage.getItem("settings") || "{}").view ?? "grid",
+  ACM: false,
+  hType: "daily",
+  hFormat: "check"
 };
 
 // SECTION SLICE
@@ -50,21 +59,29 @@ export const generalSlice = createSlice({
           title: "Your Goal",
           calendar: calendarInitializer(),
           color: "#eeeeee",
+          habitType: state.hType,
+          habitFormat: state.hFormat,
+        });
+        state.ACM = false;
+        localSetItem("calendars", state.calendars);
+        localSetItem("settings", {
+          selectedCalendar: state.calendars.length - 1,
         });
         state.selectedCalendar = state.calendars.length - 1;
-        localStorage.setItem("calendars", JSON.stringify(state.calendars));
-        localStorage.setItem(
-          "settings",
-          JSON.stringify({ selectedCalendar: state.calendars.length - 1 })
-        );
       } else toast.error("You cannot add more than 10 goals 😥");
+    },
+    setACM: (state, action: PayloadAction<boolean>) => {
+      state.ACM = action.payload;
+    },
+    setHType: (state, action: PayloadAction<"daily" | "weekly">) => {
+      state.hType = action.payload;
+    },
+    setHFormat: (state, action: PayloadAction<"check" | "number" | "time">) => {
+      state.hFormat = action.payload;
     },
     setSelectedCalendar: (state, action: PayloadAction<number>) => {
       state.selectedCalendar = action.payload;
-      localStorage.setItem(
-        "settings",
-        JSON.stringify({ selectedCalendar: action.payload })
-      );
+      localSetItem("settings", { selectedCalendar: action.payload });
     },
     completeDaily: (state, action: PayloadAction<number>) => {
       // console.log('data: ', typeof state.calendars)
@@ -79,7 +96,7 @@ export const generalSlice = createSlice({
       if (dayIndex !== -1)
         state.calendars[calendarIndex].calendar[dayIndex].goal.completed =
           currentState !== "yes" ? "yes" : "no";
-      localStorage.setItem("calendars", JSON.stringify(state.calendars));
+      localSetItem("calendars", state.calendars);
     },
     updateTitle: (state, action: PayloadAction<string>) => {
       // const day0 = state.calendars[state.selectedCalendar].calendar.find(
@@ -191,5 +208,8 @@ export const {
   // toggleDayZero,
   togglePastLocked,
   toggleView,
+  setACM,
+  setHType,
+  setHFormat,
 } = generalSlice.actions;
 export default generalSlice.reducer;
