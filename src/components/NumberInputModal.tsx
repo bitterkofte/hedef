@@ -58,7 +58,13 @@ export const NumberInputModal = () => {
     });
   };
 
-  const numpad = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "DEL"];
+  const btnFuncitoner = (btn: string) => {
+    if(btn === "AC") setValue("0")
+    else if(btn === "DEL") deleteNumber()
+    else appendNumber(btn)
+  }
+
+  const numpad = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "AC", "0", "DEL"];
 
   return (
     <AnimatePresence>
@@ -97,14 +103,16 @@ export const NumberInputModal = () => {
               {numpad.map((btn) => (
                 <motion.button
                   key={btn}
-                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+                  // whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => btn === "DEL" ? deleteNumber() : appendNumber(btn)}
-                  className={`h-14 rounded-xl flex items-center justify-center text-xl font-bold transition-all ${
+                  onClick={() => btnFuncitoner(btn)}
+                  className={`h-14 rounded-xl flex items-center justify-center text-xl font-bold hover:scale-110 transition-all duration-300 ${
                     btn === "DEL" 
-                      ? "bg-red-500/10 text-red-500 border border-red-500/20" 
-                      : "bg-white/[0.03] text-white border border-white/5"
-                  } ${btn === "0" ? "col-span-1" : ""}`}
+                      ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20" 
+                    : btn === "AC" 
+                      ? "bg-red-700/30 hover:bg-red-700/50 text-red-500 border border-red-500/20" 
+                      : "bg-white/[0.03] hover:bg-white/[0.05] text-white border border-white/5"
+                  } `}
                 >
                   {btn}
                 </motion.button>

@@ -4,8 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+#logo {
+  -webkit-user-drag: none;
+}
+
 ::-webkit-scrollbar {
   display: none;
+}
+
+.tooltip {
+  z-index: 100;
 }
 
 .driver-popover {

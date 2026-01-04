@@ -15,6 +15,7 @@ import {
   setACM,
   setEditingDay,
   setNIM,
+  updatePerformed,
 } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
 import { AddCalendarModal } from "./components/AddCalendarModal";
@@ -23,11 +24,11 @@ import Logo from "./assets/hedef.svg";
 import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { useHorizontalScroll } from "./hooks/useHorizontalScroll";
-import { MdOutlineGridView, MdOutlineViewCompact } from "react-icons/md";
+import { MdAccountCircle, MdOutlineGridView, MdOutlineViewCompact } from "react-icons/md";
 import Footer from "./components/Footer";
 import InfoGraph from "./components/InfoGraph";
 import { days } from "./utils/data";
-import { dayStyles } from "./styles";
+import { dayStyles, dayProgressStyle } from "./styles";
 
 function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
@@ -64,7 +65,7 @@ function App() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const completeHandler = (day: number, calendar: any) => {
+  const completeHandler = (day: number, calendar: any, button: number = 0) => {
     if (calendar.habitFormat === "check") {
       dispatch(completeDaily(day));
     }
@@ -73,7 +74,14 @@ function App() {
       dispatch(setNIM(true));
     }
     else if (calendar.habitFormat === "time") {
-      return;
+      const currentDay = calendar.calendar.find((d: any) => d.day === day);
+      if (!currentDay) return;
+      const currentPerformed = currentDay.goal.performed;
+      if (button === 0) {
+        dispatch(updatePerformed({ day, performed: currentPerformed + 1 }));
+      } else if (button === 2) {
+        dispatch(updatePerformed({ day, performed: Math.max(0, currentPerformed - 1) }));
+      }
     }
   };
 
@@ -164,16 +172,50 @@ function App() {
       {/* HEADER {#989898} */}
       <nav className="w-full px-10 flex justify-between items-center text-gold bg-neutral-7500 select-none">
         <button
-          className="cursor-pointer text-4xl"
+          className="cursor-pointer text-4xl w-10 h-10 flex items-center justify-center"
           onClick={() => dispatch(toggleView())}
         >
-          {view === "grid" ? <MdOutlineGridView /> : <MdOutlineViewCompact />}
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {[
+              // Path 1: Top Left Grid -> Top Bar Left Compact
+              { 
+                grid: "M3 11h8V3H3z", 
+                compact: "M3 11h9V7H3z" 
+              },
+              // Path 2: Top Right Grid -> Top Bar Right Compact
+              { 
+                grid: "M13 11h8V3H13z", 
+                compact: "M12 11h9V7H12z" 
+              },
+              // Path 3: Bottom Left Grid -> Bottom Left Compact
+              { 
+                grid: "M3 21h8v-8H3z", 
+                compact: "M3 17h7v-4H3z" 
+              },
+              // Path 4: Bottom Right Grid -> Bottom Right Compact
+              { 
+                grid: "M13 21h8v-8H13z", 
+                compact: "M11 17h10v-4H11z" 
+              }
+            ].map((p, i) => (
+              <motion.path
+                key={i}
+                animate={{ d: view === "grid" ? p.grid : p.compact }}
+                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              />
+            ))}
+          </svg>
         </button>
-        <img className="w-40 lg:w-72 py-7" src={Logo} alt="hedef" />
-        <MdOutlineGridView
+        <img className="w-40 lg:w-72 py-7" id="logo" src={Logo} alt="hedef" />
+        <MdAccountCircle
           size={40}
           className="cursor-pointer"
-          onClick={() => dispatch(toggleView())}
         />
       </nav>
 
@@ -185,26 +227,44 @@ function App() {
         <div
           id="tabs"
           ref={scrollHorRef}
-          className="w-full overflow-x-auto overflow-y-hidden flex items-center gap-3 bg-neutral-750 self-start"
+          className="sticky top-0 z-50 w-full overflow-x-auto overflow-y-hidden flex items-center gap-3 bg-neutral-750 self-start shadow-xl shadow-black/20"
         >
-          {calendars.map((c, i) => (
-            <div
-              id={"tab-" + i}
-              key={c.id}
-              // onMouseDown={(e) => e.button === 1 && deleteSelected(e, i)}
-              onMouseDown={(e) => e.button === 1 && deleteHandler(i)} //basılı tutma penceresi
-              onClick={() => dispatch(setSelectedCalendar(i))}
-              className={`${
-                i === selectedCalendar
-                  ? "bg-gold opacity-100"
-                  : "bg-white opacity-25 hover:opacity-100"
-              } flex-none px-2 py-1 text-sm text-black smoother-3 cursor-pointer`}
-            >
-              {c.title === "" ? "-undefined-" : c.title}
-            </div>
-          ))}
+          <AnimatePresence mode="popLayout">
+            {calendars.map((c, i) => (
+              <motion.div
+                id={"tab-" + i}
+                key={c.id}
+                layout
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: 0, 
+                  backgroundColor: i === selectedCalendar ? "#f59e0b" : "#737373" 
+                }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={i !== selectedCalendar ? { backgroundColor: "#ffffff" } : {}}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 30,
+                  opacity: { duration: 0.2 },
+                  backgroundColor: { duration: 0.3 }
+                }}
+                // onMouseDown={(e) => e.button === 1 && deleteSelected(e, i)}
+                onMouseDown={(e) => e.button === 1 && deleteHandler(i)} //basılı tutma penceresi
+                onClick={() => dispatch(setSelectedCalendar(i))}
+                className={`${
+                  i === selectedCalendar
+                    ? "opacity-100 font-bold"
+                    : "font-normal"
+                } shadow-sm flex-none px-2 py-1 text-sm text-black cursor-pointer rounded-sm`}
+              >
+                {c.title === "" ? "-undefined-" : c.title}
+              </motion.div>
+            ))}
+          </AnimatePresence>
           <IoIosAddCircleOutline
-            className="flex-none mr-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer"
+            className="flex-none mr-2 text-white hover:text-gold opacity-40 hover:opacity-100 smoother-2 cursor-pointer ml-1"
             size={20}
             onClick={(e) => {
               e.stopPropagation();
@@ -233,18 +293,18 @@ function App() {
             placeholder="description"
             maxLength={20}
           />
-          <p className="text-sm text-gold">
+          {/* <p className="text-sm text-gold">
             {new Date(
               calendars[selectedCalendar].calendar[0].timestamp
             ).getFullYear()}
-          </p>
-          <div className="flex items-center gap-2">
+          </p> */}
+          {/* <div className="flex items-center gap-2">
             <p className="text-sm text-gold">{calendars[selectedCalendar].habitFormat} - </p>
             <p className="text-sm text-gold">{calendars[selectedCalendar].target}</p>
-          </div>
+          </div> */}
         </div>
 
-        {/* GRID VIEW {#b300ff, 76} */}
+        {/* GRID VIEW {#b300ff, 77} */}
         {view === "grid" && (
           <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, monthIndex) => {
@@ -298,6 +358,24 @@ function App() {
                         data-tooltip-id="date"
                         data-tooltip-content={dateFormatter(day.timestamp)}
                         data-tooltip-place="top"
+                        onContextMenu={(e) => {
+                          if (selCal.habitFormat === "time") e.preventDefault();
+                        }}
+                        onMouseDown={(e) => {
+                          if (
+                            e.button === 2 &&
+                            selCal.habitFormat === "time"
+                          ) {
+                            if (
+                              isPastLocked &&
+                              day.timestamp < currentTimestamp &&
+                              !isToday(day.timestamp, currentTimestamp)
+                            ) {
+                              return;
+                            }
+                            completeHandler(day.day, selCal, 2);
+                          }
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (
@@ -307,18 +385,24 @@ function App() {
                           ) {
                             return;
                           }
-                          completeHandler(day.day, calendars[selectedCalendar]);
+                          completeHandler(day.day, selCal, 0);
                         }}
                         disabled={day.timestamp > currentTimestamp}
                       >
-                        {dayViewHandler(calendars[selectedCalendar], day, currentTimestamp)}
+                        {(selCal.habitFormat === "number" || selCal.habitFormat === "time") && (
+                          <div 
+                            className="absolute bottom-0 left-0 w-full transition-all duration-300 ease-in-out pointer-events-none"
+                            style={dayProgressStyle(day, selCal)}
+                          />
+                        )}
+                        <span className="relative z-10">{dayViewHandler(selCal, day, currentTimestamp)}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               );
             })}
-            <Tooltip id="date" border="1px solid #8c6000" style={{ borderRadius: 9 }}/>
+            <Tooltip id="date" className="tooltip" border="1px solid #8c6000" style={{ borderRadius: 9 }}/>
           </div>
         )}
 
@@ -328,12 +412,31 @@ function App() {
           <div id="calendar" className="w-full grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-3 md:px-20 px-5">
             {calendars[selectedCalendar].calendar.map((day) => (
               <button
-              key={day.day}
-              id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
+                key={day.day}
+                id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
                 className={dayStyles(isPastLocked, day, currentTimestamp, calendars[selectedCalendar])}
                 data-tooltip-id="date"
                 data-tooltip-content={dateFormatter(day.timestamp)}
                 data-tooltip-place="top"
+                onContextMenu={(e) => {
+                  if (calendars[selectedCalendar].habitFormat === "time") e.preventDefault();
+                }}
+                onMouseDown={(e) => {
+                  const selCal = calendars[selectedCalendar];
+                  if (
+                    e.button === 2 &&
+                    selCal.habitFormat === "time"
+                  ) {
+                    if (
+                      isPastLocked &&
+                      day.timestamp < currentTimestamp &&
+                      !isToday(day.timestamp, currentTimestamp)
+                    ) {
+                      return;
+                    }
+                    completeHandler(day.day, selCal, 2);
+                  }
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (
@@ -343,14 +446,20 @@ function App() {
                   ) {
                     return;
                   }
-                  completeHandler(day.day, calendars[selectedCalendar]);
+                  completeHandler(day.day, calendars[selectedCalendar], 0);
                 }}
                 disabled={day.timestamp > currentTimestamp}
               >
-                {day.day}
+                {(calendars[selectedCalendar].habitFormat === "number" || calendars[selectedCalendar].habitFormat === "time") && (
+                  <div 
+                    className="absolute bottom-0 left-0 w-full transition-all duration-300 ease-in-out pointer-events-none"
+                    style={dayProgressStyle(day, calendars[selectedCalendar])}
+                  />
+                )}
+                <span className="relative z-10">{dayViewHandler(calendars[selectedCalendar], day, currentTimestamp)}</span>
               </button>
             ))}
-            <Tooltip id="date" border="1px solid #8c6000" style={{ borderRadius: 9 }} />
+            <Tooltip id="date" className="tooltip" border="1px solid #8c6000" style={{ borderRadius: 9 }} />
           </div>
         )}
       </div>
