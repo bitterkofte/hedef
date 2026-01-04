@@ -94,8 +94,8 @@ export const Tab = forwardRef<HTMLDivElement, TabProps>(
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 3, ease: "linear" }}
-              className="absolute bottom-0 left-0 h-1 bg-white/50 z-20"
+              transition={{ duration: 1, ease: "linear", delay: 2 }}
+              className="absolute bottom-0 left-0 h-full bg-red-500/70 z-20"
             />
           )}
         </AnimatePresence>

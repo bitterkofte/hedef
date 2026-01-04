@@ -22,6 +22,7 @@ export interface GeneralStateType {
   hType: "daily" | "weekly";
   hFormat: "check" | "number" | "time";
   hTarget: number;
+  isSettingsOpen: boolean;
 }
 
 const initialState: GeneralStateType = {
@@ -39,6 +40,7 @@ const initialState: GeneralStateType = {
   hType: "daily",
   hFormat: "check",
   hTarget: 0,
+  isSettingsOpen: false,
 };
 
 // SECTION SLICE
@@ -74,6 +76,9 @@ export const generalSlice = createSlice({
     },
     setNIM: (state, action: PayloadAction<boolean>) => {
       state.NIM = action.payload;
+    },
+    setSettingsOpen: (state, action: PayloadAction<boolean>) => {
+      state.isSettingsOpen = action.payload;
     },
     setEditingDay: (state, action: PayloadAction<number | null>) => {
       state.editingDay = action.payload;
@@ -181,6 +186,7 @@ export const {
   toggleView,
   setACM,
   setNIM,
+  setSettingsOpen,
   setEditingDay,
   updatePerformed,
   setHType,

@@ -8,20 +8,19 @@ import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import { Loading } from "./Loading";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { deleteCalendar, toggleDayZero, togglePastLocked } from "../redux/generalSlice";
+import { deleteCalendar, toggleDayZero, togglePastLocked, setSettingsOpen } from "../redux/generalSlice";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { IoLockClosedOutline, IoLockOpenOutline, IoTrashOutline } from "react-icons/io5";
 
 export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean) => void }) => {
-  const [isSettings, setIsSettings] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const { calendars, selectedCalendar, isPastLocked } = useAppSelector((s) => s.general);
+  const { calendars, selectedCalendar, isPastLocked, isSettingsOpen } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
 
   useClickOutside({
     ref: settingsRef,
-    handler: () => setIsSettings(false),
+    handler: () => dispatch(setSettingsOpen(false)),
   });
 
   const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
@@ -38,16 +37,17 @@ export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean
     setIsExporting(false);
   };
 
-  const toggleSettings = () => setIsSettings((s) => !s);
+  const toggleSettings = () => dispatch(setSettingsOpen(!isSettingsOpen));
   return (
     <div
-      ref={settingsRef}
-      className="fixed z-10 right-3 bottom-3 flex flex-col gap-3 items-end"
+    id="settings"
+    ref={settingsRef}
+    className="fixed z-10 right-3 bottom-3 flex flex-col gap-3 items-end"
     >
       
       <div
         className={`flex flex-col gap-3 rounded-lg overflow-hidden smoother-3 ease-in-out ${
-          isSettings ? "max-h-60" : "max-h-0"
+          isSettingsOpen ? "max-h-60" : "max-h-0"
         }`}
       >
         {/* <ImportButton />
@@ -66,13 +66,6 @@ export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean
           <IoTrashOutline size={20} className={`smoother-3`} />
           <span>Delete calendar</span>
         </button>
-        {/* <button
-          className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
-          onClick={() => dispatch(toggleDayZero())}
-        >
-          <IoIosAddCircleOutline size={20} className={`smoother-3 ${isDayZero ? "rotate-45" : "rotate-0"}`} />
-          {isDayZero ? "Exclude the day 0" : " Include the day 0"}
-        </button> */}
         <button
           className="p-3 flex items-center gap-2 text-white bg-sky-800 hover:bg-sky-700 smoother-2 rounded-lg disabled:bg-neutral-700"
           onClick={exportCalendarImage}
@@ -83,12 +76,12 @@ export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean
         </button>
       </div>
 
-      <div id="settings" className="bg-gold rounded-3xl">
+      <div className="bg-gold rounded-3xl">
         <div className="p-2 squircle cursor-pointer" onClick={toggleSettings}>
           <HiOutlineCog8Tooth
             size={30}
             className={`z-10 smoother-3 ease-in-out ${
-              isSettings ? "rotate-90" : "rotate-0"
+              isSettingsOpen ? "rotate-90" : "rotate-0"
             }`}
           />
         </div>
