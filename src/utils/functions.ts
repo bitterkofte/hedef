@@ -21,7 +21,8 @@ export const calendarInitializer = () => {
       day: i + 1,
       timestamp: date.getTime(),
       goal: {
-        completed: "no"
+        completed: "no",
+        performed: 0
       },
     });
   }
@@ -35,6 +36,7 @@ export const initialCalendar: CalendarType = {
   color: "#eeeeee",
   habitType: "daily",
   habitFormat: "check",
+  target: 0,
 };
 
 export const initialSettings: SettingsType = {
@@ -136,6 +138,7 @@ export const LocalStorageCorrection = () => {
           "color",
           "habitType",
           "habitFormat",
+          "target"
         ];
         Object.keys(validatedCal).forEach((key) => {
           if (!allowedCalKeys.includes(key)) {
@@ -160,28 +163,44 @@ export const LocalStorageCorrection = () => {
 };
 
 const dayCheck = (days: any) => {
-  if (typeof days[0].completed === "object") return
-  // const allowedDayKeys = [
-  //   "completed",
-  //   "day",
-  //   "timestamp"
-  // ];
-  // Object.keys(days).forEach((key) => {
-  //         if (typeof d.completed !== "object") {
-            
-  //         }
-  //       });
+  if (!days || !Array.isArray(days) || days.length === 0) return calendarInitializer();
+
+  // If already migrated (has goal property), return as is to avoid resetting 'performed'
+  if (days[0].goal) return days;
+
   const newDays = days.map((d: any) => {
     if (d.completed === "yes") {
-      return {...d, goal :{
-        completed: "yes"
-      }
-    }}
-    else {
-      return {...d, goal :{
-        completed: "no"
-      }}
+      return {
+        ...d,
+        goal: {
+          completed: "yes",
+          performed: 0,
+        },
+      };
+    } else {
+      return {
+        ...d,
+        goal: {
+          completed: "no",
+          performed: 0,
+        },
+      };
     }
-  })
+  });
   return newDays;
+};
+
+export const dayViewHandler = (currentCalendarData: any, day: any, currentTimestamp: number) => {
+  if(currentCalendarData.habitFormat === "check") {
+    return day.day
+  }
+  else if(currentCalendarData.habitFormat === "number") {
+    if (currentTimestamp < day.timestamp) return day.day
+    else return day.goal.performed
+  }
+  else if(currentCalendarData.habitFormat === "time"){
+    if (currentTimestamp < day.timestamp) return day.day
+    return day.goal.performed
+  }
+  else return day.day
 }

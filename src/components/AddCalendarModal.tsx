@@ -1,18 +1,21 @@
 import { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { addCalendar, setACM, setHType, setHFormat } from '../redux/generalSlice';
+import { addCalendar, setACM, setHType, setHFormat, setHTarget } from '../redux/generalSlice';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { IoIosAddCircleOutline } from 'react-icons/io';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AddCalendarModal = () => {
-  const { ACM, hType, hFormat } = useAppSelector((s) => s.general);
+  const { ACM, hType, hFormat, hTarget } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
   const modalRef = useRef<HTMLDivElement>(null);
 
   useClickOutside({
     ref: modalRef,
-    handler: () => dispatch(setACM(false))
+    handler: () => {
+      dispatch(setHTarget(0));
+      dispatch(setACM(false));
+    }
   });
 
   const habitTypes: ("daily" | "weekly")[] = ["daily", "weekly"];
@@ -90,6 +93,30 @@ export const AddCalendarModal = () => {
                     }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
+                </div>
+              </div>
+
+              {/* Habit Target Input */}
+              <div className="flex flex-col gap-4">
+                <span className={`text-[10px] uppercase tracking-[0.2em] font-black ml-1 transition-colors duration-300 ${hFormat === 'check' ? 'text-neutral-700' : 'text-neutral-500'}`}>
+                  Habit Target
+                </span>
+                <div className="relative group">
+                  <input
+                    type="number"
+                    disabled={hFormat === "check"}
+                    value={hFormat === "check" ? 0 : hTarget}
+                    // value={hFormat === "check" ? 0 : hTarget === 0 ? null : hTarget}
+                    onChange={(e) => dispatch(setHTarget(Number(e.target.value)))}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl h-14 px-6 text-white selection:bg-gold/80 font-bold outline-none focus:border-gold/50 transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed group-hover:bg-white/[0.05] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="Enter target..."
+                  />
+                  {hFormat !== "check" && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 text-[10px] font-black pointer-events-none">
+                      VALUE
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -1,8 +1,9 @@
 export interface Months {
   day: number;
-  timestamp: number; // Make it optional if it's not always present
+  timestamp: number;
   goal: {
     completed: string;
+    performed: number;
   };
 }
 
@@ -14,6 +15,7 @@ export type CalendarType = {
   color: string;
   habitType: "daily" | "weekly";
   habitFormat: "check" | "number" | "time";
+  target: number;
 };
 export interface SettingsType {
   selectedCalendar: number;

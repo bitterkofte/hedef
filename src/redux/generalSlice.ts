@@ -6,31 +6,22 @@ import {
   localSetItem,
   LocalStorageCorrection,
 } from "../utils/functions";
-// import { RamadanMonth } from "../utils/ramadanMonth";
 import { toast } from "sonner";
 import { CalendarType } from "../types";
 
 LocalStorageCorrection();
 
-// export const initialCalendar: CalendarType = {
-//   id: 0,
-//   title: "Your Goal",
-//   calendar: calendarInitializer(),
-//   color: "#eeeeee",
-// };
-// export const initialSettings: SettingsType = {
-//   selectedCalendar: 0,
-//   isPastLocked: true,
-//   view: "grid",
-// };
 export interface GeneralStateType {
   calendars: CalendarType[];
   selectedCalendar: number;
   isPastLocked: boolean;
   view: "grid" | "list";
   ACM: boolean;
+  NIM: boolean;
+  editingDay: number | null;
   hType: "daily" | "weekly";
   hFormat: "check" | "number" | "time";
+  hTarget: number;
 }
 
 const initialState: GeneralStateType = {
@@ -43,8 +34,11 @@ const initialState: GeneralStateType = {
     JSON.parse(localStorage.getItem("settings") || "{}").isPastLocked ?? true,
   view: JSON.parse(localStorage.getItem("settings") || "{}").view ?? "grid",
   ACM: false,
+  NIM: false,
+  editingDay: null,
   hType: "daily",
-  hFormat: "check"
+  hFormat: "check",
+  hTarget: 0,
 };
 
 // SECTION SLICE
@@ -53,6 +47,10 @@ export const generalSlice = createSlice({
   initialState,
   reducers: {
     addCalendar: (state) => {
+      if (state.hFormat !== "check" && (state.hTarget === null || state.hTarget <= 0)) {
+        toast.error("Target cannot be negative or zero!");
+        return;
+      }
       if (state.calendars.length < 10) {
         state.calendars.push({
           id: Date.now(),
@@ -61,6 +59,7 @@ export const generalSlice = createSlice({
           color: "#eeeeee",
           habitType: state.hType,
           habitFormat: state.hFormat,
+          target: state.hFormat === "check" ? 0 : state.hTarget,
         });
         state.ACM = false;
         localSetItem("calendars", state.calendars);
@@ -73,20 +72,26 @@ export const generalSlice = createSlice({
     setACM: (state, action: PayloadAction<boolean>) => {
       state.ACM = action.payload;
     },
+    setNIM: (state, action: PayloadAction<boolean>) => {
+      state.NIM = action.payload;
+    },
+    setEditingDay: (state, action: PayloadAction<number | null>) => {
+      state.editingDay = action.payload;
+    },
     setHType: (state, action: PayloadAction<"daily" | "weekly">) => {
       state.hType = action.payload;
     },
     setHFormat: (state, action: PayloadAction<"check" | "number" | "time">) => {
       state.hFormat = action.payload;
     },
+    setHTarget: (state, action: PayloadAction<number>) => {
+      state.hTarget = action.payload;
+    },
     setSelectedCalendar: (state, action: PayloadAction<number>) => {
       state.selectedCalendar = action.payload;
       localSetItem("settings", { selectedCalendar: action.payload });
     },
     completeDaily: (state, action: PayloadAction<number>) => {
-      // console.log('data: ', typeof state.calendars)
-      // const theDay = state.calendars[state.selectedCalendar].calendar.find(d => d.day === action.payload);
-      // state.calendars[state.selectedCalendar].calendar = {...theDay, completed: "yes"}
       const calendarIndex = state.selectedCalendar;
       const dayIndex = state.calendars[calendarIndex].calendar.findIndex(
         (d) => d.day === action.payload
@@ -98,40 +103,25 @@ export const generalSlice = createSlice({
           currentState !== "yes" ? "yes" : "no";
       localSetItem("calendars", state.calendars);
     },
+    updatePerformed: (
+      state,
+      action: PayloadAction<{ day: number; performed: number }>
+    ) => {
+      const { day, performed } = action.payload;
+      const calendarIndex = state.selectedCalendar;
+      const dayIndex = state.calendars[calendarIndex].calendar.findIndex(
+        (d) => d.day === day
+      );
+      if (dayIndex !== -1) {
+        state.calendars[calendarIndex].calendar[dayIndex].goal.performed =
+          performed;
+        const target = state.calendars[calendarIndex].target;
+        state.calendars[calendarIndex].calendar[dayIndex].goal.completed =
+          performed >= target ? "yes" : "no";
+      }
+      localSetItem("calendars", state.calendars);
+    },
     updateTitle: (state, action: PayloadAction<string>) => {
-      // const day0 = state.calendars[state.selectedCalendar].calendar.find(
-      //   (d) => d.day === 0
-      // );
-      // const day30 = state.calendars[state.selectedCalendar].calendar.find(
-      //   (d) => d.day === 30
-      // );
-      // const isTeravih = day0 && !day30;
-
-      // const incTer = action.payload.toLowerCase().includes("teravih");
-
-      // if (incTer && !isTeravih) {
-      //   state.calendars[state.selectedCalendar].calendar = [
-      //     {
-      //       day: 0,
-      //       completed: "not yet",
-      //       timestamp: 1740690000000,
-      //     },
-      //     ...state.calendars[state.selectedCalendar].calendar,
-      //   ];
-      //   state.calendars[state.selectedCalendar].calendar = state.calendars[
-      //     state.selectedCalendar
-      //   ].calendar.filter((d) => d.day !== 30);
-      // }
-      // if (!incTer && isTeravih) {
-      //   state.calendars[state.selectedCalendar].calendar = state.calendars[
-      //     state.selectedCalendar
-      //   ].calendar.filter((d) => d.day !== 0);
-      //   state.calendars[state.selectedCalendar].calendar.push({
-      //     day: 30,
-      //     completed: "not yet",
-      //     timestamp: 1743282000000,
-      //   });
-      // }
       state.calendars[state.selectedCalendar].title = action.payload;
       localStorage.setItem("calendars", JSON.stringify(state.calendars));
     },
@@ -175,25 +165,6 @@ export const generalSlice = createSlice({
       state.view = state.view === "grid" ? "list" : "grid";
       localSetItem("settings", { view: state.view });
     },
-    // toggleDayZero: (state) => {
-    //   const isDayZero = !!state.calendars[state.selectedCalendar].calendar.find(
-    //     (d) => d.day === 0
-    //   );
-    //   if (isDayZero)
-    //     state.calendars[state.selectedCalendar].calendar = state.calendars[
-    //       state.selectedCalendar
-    //     ].calendar.filter((d) => d.day !== 0);
-    //   else
-    //     state.calendars[state.selectedCalendar].calendar = [
-    //       {
-    //         day: 0,
-    //         completed: "not yet",
-    //         timestamp: 1710028800000,
-    //       },
-    //       ...state.calendars[state.selectedCalendar].calendar,
-    //     ];
-    //   localStorage.setItem("calendars", JSON.stringify(state.calendars));
-    // },
   },
 });
 
@@ -209,7 +180,11 @@ export const {
   togglePastLocked,
   toggleView,
   setACM,
+  setNIM,
+  setEditingDay,
+  updatePerformed,
   setHType,
   setHFormat,
+  setHTarget,
 } = generalSlice.actions;
 export default generalSlice.reducer;

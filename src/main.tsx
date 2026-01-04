@@ -7,7 +7,7 @@ import { Toaster } from 'sonner'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
-    <Toaster position='top-center' richColors/>
+    <Toaster position='top-center' offset={12}  richColors/>
     <App />
   </Provider>
 )

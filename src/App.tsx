@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { dateFormatter, isToday } from "./utils/functions";
+import { useEffect, useState, useRef } from "react";
+import { dateFormatter, isToday, dayViewHandler } from "./utils/functions";
+import { motion, AnimatePresence } from "framer-motion";
+import { useClickOutside } from "./hooks/useClickOutside";
 import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import {
@@ -11,9 +13,12 @@ import {
   updateDescription,
   updateTitle,
   setACM,
+  setEditingDay,
+  setNIM,
 } from "./redux/generalSlice";
 import { Settings } from "./components/Settings";
 import { AddCalendarModal } from "./components/AddCalendarModal";
+import { NumberInputModal } from "./components/NumberInputModal";
 import Logo from "./assets/hedef.svg";
 import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
@@ -22,15 +27,33 @@ import { MdOutlineGridView, MdOutlineViewCompact } from "react-icons/md";
 import Footer from "./components/Footer";
 import InfoGraph from "./components/InfoGraph";
 import { days } from "./utils/data";
+import { dayStyles } from "./styles";
 
 function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
-  const { calendars, selectedCalendar, isPastLocked, view, ACM, hType, hFormat } = useAppSelector(
+  const { calendars, selectedCalendar, isPastLocked, view, ACM, NIM, hType, hFormat } = useAppSelector(
     (s) => s.general
   );
   const dispatch = useAppDispatch();
   const scrollHorRef = useHorizontalScroll();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside({
+    ref: deleteModalRef,
+    handler: () => setIsModalVisible(false),
+  });
+
+  useEffect(() => {
+    if (isModalVisible || ACM || NIM) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isModalVisible, ACM, NIM]);
 
   useEffect(() => {
     const intervalId = setInterval(
@@ -41,8 +64,17 @@ function App() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const completeHandler = (day: number) => {
-    dispatch(completeDaily(day));
+  const completeHandler = (day: number, calendar: any) => {
+    if (calendar.habitFormat === "check") {
+      dispatch(completeDaily(day));
+    }
+    else if (calendar.habitFormat === "number") {
+      dispatch(setEditingDay(day));
+      dispatch(setNIM(true));
+    }
+    else if (calendar.habitFormat === "time") {
+      return;
+    }
   };
 
   const deleteHandler = (i: number) => {
@@ -72,32 +104,62 @@ function App() {
 
   return (
     <>
-      {isModalVisible && (
-        <div className="backdrop-blur-xl fixed inset-0 z-50 flex items-center justify-center">
-          <div className="bg-amber-700 p-4 rounded-lg drop-shadow-xl">
-            <p className="mb-5">
-              Are you sure you want to delete this calendar?
-            </p>
-            <div className="flex gap-2 justify-between">
-              <button
-                className="p-2 rounded-lg bg-amber-600 hover:bg-amber-500"
-                onClick={() => setIsModalVisible(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="p-2 rounded-lg bg-amber-600 hover:bg-amber-500"
-                onClick={() => {
-                  setIsModalVisible(false);
-                  dispatch(deleteSelectedCalendar(selectedCalendar));
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    {/* MODAL {#ffb727, 55} */}
+      <AnimatePresence>
+        {isModalVisible && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.4 } }}
+            exit={{ opacity: 0, transition: { duration: 0.6 } }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md"
+          >
+            <motion.div
+              ref={deleteModalRef}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-neutral-800/80 border border-white/10 p-8 rounded-[2rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] w-[90%] max-w-md overflow-hidden relative"
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/10 blur-[80px] rounded-full pointer-events-none" />
+
+              <h2 className="text-2xl font-black text-white mb-6 text-center font-grotesque tracking-tight relative z-10">
+                DELETE CALENDAR?
+              </h2>
+
+              <p className="mb-10 text-neutral-300 text-center relative z-10 font-medium leading-relaxed">
+                Are you sure you want to delete this calendar? This action cannot be undone.
+              </p>
+
+              <div className="flex gap-4 justify-between relative z-10">
+                <motion.button
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+                  onClick={() => setIsModalVisible(false)}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{
+                    scale: 1.02,
+                    y: -2,
+                    transition: { duration: 0.2 },
+                  }}
+                  whileTap={{ scale: 0.85 }}
+                  className="flex-1 py-4 rounded-2xl bg-amber-600 hover:bg-amber-500 text-black font-black shadow-[0_10px_30px_rgba(217,119,6,0.2)]"
+                  onClick={() => {
+                    setIsModalVisible(false);
+                    dispatch(deleteSelectedCalendar(selectedCalendar));
+                  }}
+                >
+                  Delete
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* HEADER {#989898} */}
       <nav className="w-full px-10 flex justify-between items-center text-gold bg-neutral-7500 select-none">
@@ -149,9 +211,6 @@ function App() {
               dispatch(setACM(true));
             }}
           />
-          {/* <div className='absolute p-5 bg-lime-600 z-50'>
-            
-          </div> */}
         </div>
 
         {/* TITLE & DESC {#fbfd6e} */}
@@ -179,13 +238,19 @@ function App() {
               calendars[selectedCalendar].calendar[0].timestamp
             ).getFullYear()}
           </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-gold">{calendars[selectedCalendar].habitFormat} - </p>
+            <p className="text-sm text-gold">{calendars[selectedCalendar].target}</p>
+          </div>
         </div>
 
-        {/* GRID VIEW {#b300ff, 95} */}
+        {/* GRID VIEW {#b300ff, 76} */}
         {view === "grid" && (
           <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, monthIndex) => {
+              const selCal = calendars[selectedCalendar];
               const currentCalendarData = calendars[selectedCalendar].calendar;
+              // console.log('currentCalendarData: ', currentCalendarData)
               const monthDays = currentCalendarData.filter(
                 (day) => new Date(day.timestamp).getMonth() === monthIndex
               );
@@ -229,33 +294,12 @@ function App() {
                       <button
                         key={day.day}
                         id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
-                        className={`w-8 h-8 text-xs p-1 border flex justify-center items-center rounded-full  disabled:border-neutral-600 disabled:text-neutral-600 md:disabled:border-neutral-600 md:disabled:text-neutral-600 disabled:cursor-default smoother-2 
-                        ${
-                          isPastLocked &&
-                          day.timestamp < currentTimestamp &&
-                          !isToday(day.timestamp, currentTimestamp)
-                            ? "cursor-default opacity-60"
-                            : "cursor-pointer opacity-100 md:hover:border-green-600 md:hover:text-green-600"
-                        }
-                        ${
-                          day.goal.completed === "yes"
-                            ? "border-green-600 text-green-600 hover:border-green-600 hover:text-green-600"
-                            : ""
-                        } ${
-                          isToday(day.timestamp, currentTimestamp) &&
-                          day.goal.completed !== "yes"
-                            ? "border-gold text-gold"
-                            : ""
-                        } ${
-                          day.goal.completed === "no" &&
-                          !isToday(day.timestamp, currentTimestamp)
-                            ? "border-neutral-400 text-neutral-400"
-                            : ""
-                        }`}
+                        className={dayStyles(isPastLocked, day, currentTimestamp, selCal)}
                         data-tooltip-id="date"
                         data-tooltip-content={dateFormatter(day.timestamp)}
                         data-tooltip-place="top"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (
                             isPastLocked &&
                             day.timestamp < currentTimestamp &&
@@ -263,11 +307,11 @@ function App() {
                           ) {
                             return;
                           }
-                          completeHandler(day.day);
+                          completeHandler(day.day, calendars[selectedCalendar]);
                         }}
                         disabled={day.timestamp > currentTimestamp}
                       >
-                        {day.day}
+                        {dayViewHandler(calendars[selectedCalendar], day, currentTimestamp)}
                       </button>
                     ))}
                   </div>
@@ -286,33 +330,12 @@ function App() {
               <button
               key={day.day}
               id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
-                className={`w-8 h-8 text-xs p-1 border flex justify-center items-center rounded-full  disabled:border-neutral-600 disabled:text-neutral-600 md:disabled:border-neutral-600 md:disabled:text-neutral-600 disabled:cursor-default smoother-2 
-                        ${
-                          isPastLocked &&
-                          day.timestamp < currentTimestamp &&
-                          !isToday(day.timestamp, currentTimestamp)
-                            ? "cursor-default opacity-60"
-                            : "cursor-pointer opacity-100 md:hover:border-green-600 md:hover:text-green-600"
-                        }
-                        ${
-                          day.goal.completed === "yes"
-                            ? "border-green-600 text-green-600 hover:border-green-600 hover:text-green-600"
-                            : ""
-                        } ${
-                  isToday(day.timestamp, currentTimestamp) &&
-                  day.goal.completed !== "yes"
-                    ? "border-gold text-gold"
-                    : ""
-                } ${
-                  day.goal.completed === "no" &&
-                  !isToday(day.timestamp, currentTimestamp)
-                    ? "border-neutral-400 text-neutral-400"
-                    : ""
-                }`}
+                className={dayStyles(isPastLocked, day, currentTimestamp, calendars[selectedCalendar])}
                 data-tooltip-id="date"
                 data-tooltip-content={dateFormatter(day.timestamp)}
                 data-tooltip-place="top"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (
                     isPastLocked &&
                     day.timestamp < currentTimestamp &&
@@ -320,7 +343,7 @@ function App() {
                   ) {
                     return;
                   }
-                  completeHandler(day.day);
+                  completeHandler(day.day, calendars[selectedCalendar]);
                 }}
                 disabled={day.timestamp > currentTimestamp}
               >
@@ -333,6 +356,7 @@ function App() {
       </div>
 
       <AddCalendarModal />
+      <NumberInputModal />
       <Settings setIsModalVisible={setIsModalVisible} />
       <InfoGraph />
       <Footer />
