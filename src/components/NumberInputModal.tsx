@@ -4,6 +4,7 @@ import { setNIM, setEditingDay, updatePerformed } from '../redux/generalSlice';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoMdClose, IoMdCheckmark } from 'react-icons/io';
+import { dateFormatter } from '../utils/functions';
 
 export const NumberInputModal = () => {
   const { NIM, editingDay, calendars, selectedCalendar } = useAppSelector((s) => s.general);
@@ -90,6 +91,10 @@ export const NumberInputModal = () => {
               <span className="text-neutral-500 text-[10px] uppercase tracking-[0.2em] font-black">
                 DAY {editingDay} PROGRESS
               </span>
+              <p className="mt-3 text-neutral-500 text-[10px] uppercase tracking-[0.2em] font-black">
+                {dateFormatter(currentDayData?.timestamp)}
+                {/* {new Date(currentDayData?.timestamp).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} */}
+              </p>
             </div>
 
             <div className="relative mb-8 z-10">
@@ -106,7 +111,7 @@ export const NumberInputModal = () => {
                   // whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => btnFuncitoner(btn)}
-                  className={`h-14 rounded-xl flex items-center justify-center text-xl font-bold hover:scale-110 transition-all duration-300 ${
+                  className={`h-14 rounded-xl flex items-center justify-center text-xl font-bold hover:scale-105 transition-all duration-300 ${
                     btn === "DEL" 
                       ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20" 
                     : btn === "AC" 
@@ -121,7 +126,7 @@ export const NumberInputModal = () => {
 
             <div className="flex gap-4 relative z-10">
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCancel}
                 className="flex-1 py-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold border border-white/5 flex items-center justify-center gap-2 transition-colors"
@@ -130,7 +135,7 @@ export const NumberInputModal = () => {
                 <span className="text-xs uppercase tracking-wider">Cancel</span>
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.85 }}
                 onClick={handleEnter}
                 className="flex-1 py-4 rounded-xl bg-gold hover:bg-yellow-400 text-black font-black shadow-[0_10px_20px_rgba(217,119,6,0.2)] flex items-center justify-center gap-2 transition-all"

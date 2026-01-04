@@ -152,11 +152,10 @@ function App() {
                 <motion.button
                   whileHover={{
                     scale: 1.02,
-                    y: -2,
                     transition: { duration: 0.2 },
                   }}
                   whileTap={{ scale: 0.85 }}
-                  className="flex-1 py-4 rounded-2xl bg-amber-600 hover:bg-amber-500 text-black font-black shadow-[0_10px_30px_rgba(217,119,6,0.2)]"
+                  className="flex-1 py-4 rounded-2xl bg-red-600 hover:bg-red-600 text-black font-black shadow-[0_2px_30px_rgba(217,27,6,0.891)]"
                   onClick={() => {
                     setIsModalVisible(false);
                     dispatch(deleteSelectedCalendar(selectedCalendar));
