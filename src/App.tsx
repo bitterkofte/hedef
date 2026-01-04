@@ -20,11 +20,12 @@ import {
 import { Settings } from "./components/Settings";
 import { AddCalendarModal } from "./components/AddCalendarModal";
 import { NumberInputModal } from "./components/NumberInputModal";
+import { Tab } from "./components/Tab";
 import Logo from "./assets/hedef.svg";
 import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { useHorizontalScroll } from "./hooks/useHorizontalScroll";
-import { MdAccountCircle, MdOutlineGridView, MdOutlineViewCompact } from "react-icons/md";
+import { MdAccountCircle } from "react-icons/md";
 import Footer from "./components/Footer";
 import InfoGraph from "./components/InfoGraph";
 import { days } from "./utils/data";
@@ -86,7 +87,7 @@ function App() {
   };
 
   const deleteHandler = (i: number) => {
-    setSelectedCalendar(i);
+    dispatch(setSelectedCalendar(i));
     setIsModalVisible(true);
     // dispatch(deleteSelectedCalendar(i));
   };
@@ -231,36 +232,13 @@ function App() {
         >
           <AnimatePresence mode="popLayout">
             {calendars.map((c, i) => (
-              <motion.div
-                id={"tab-" + i}
+              <Tab
                 key={c.id}
-                layout
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ 
-                  opacity: 1, 
-                  x: 0, 
-                  backgroundColor: i === selectedCalendar ? "#f59e0b" : "#737373" 
-                }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={i !== selectedCalendar ? { backgroundColor: "#ffffff" } : {}}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                  opacity: { duration: 0.2 },
-                  backgroundColor: { duration: 0.3 }
-                }}
-                // onMouseDown={(e) => e.button === 1 && deleteSelected(e, i)}
-                onMouseDown={(e) => e.button === 1 && deleteHandler(i)} //basılı tutma penceresi
-                onClick={() => dispatch(setSelectedCalendar(i))}
-                className={`${
-                  i === selectedCalendar
-                    ? "opacity-100 font-bold"
-                    : "font-normal"
-                } shadow-sm flex-none px-2 py-1 text-sm text-black cursor-pointer rounded-sm`}
-              >
-                {c.title === "" ? "-undefined-" : c.title}
-              </motion.div>
+                c={c}
+                i={i}
+                selectedCalendar={selectedCalendar}
+                deleteHandler={deleteHandler}
+              />
             ))}
           </AnimatePresence>
           <IoIosAddCircleOutline
@@ -304,7 +282,7 @@ function App() {
           </div> */}
         </div>
 
-        {/* GRID VIEW {#b300ff, 77} */}
+        {/* GRID VIEW {#b300ff, 100} */}
         {view === "grid" && (
           <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, monthIndex) => {
