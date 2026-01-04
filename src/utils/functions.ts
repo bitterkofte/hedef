@@ -21,7 +21,7 @@ export const calendarInitializer = () => {
       day: i + 1,
       timestamp: date.getTime(),
       goal: {
-        completed: "no",
+        completed: "no"
       },
     });
   }
@@ -83,7 +83,7 @@ export const localSetItem = (key: string, value: object) => {
 
 export const LocalStorageCorrection = () => {
   try {
-    // 1. Correct Settings
+    // SECTION 1. Correct Settings
     const rawSettings = localStorage.getItem("settings");
     let settings = rawSettings ? JSON.parse(rawSettings) : null;
 
@@ -106,7 +106,7 @@ export const LocalStorageCorrection = () => {
     }
     localStorage.setItem("settings", JSON.stringify(settings));
 
-    // 2. Correct Calendars
+    // SECTION 2. Correct Calendars
     const rawCalendars = localStorage.getItem("calendars");
     let calendars = rawCalendars ? JSON.parse(rawCalendars) : null;
 
@@ -116,6 +116,7 @@ export const LocalStorageCorrection = () => {
       // Validate each calendar object in the array
       calendars = calendars.map((cal: any) => {
         const validatedCal = { ...cal };
+        validatedCal.calendar = dayCheck(validatedCal.calendar);
 
         // Ensure required keys exist
         if (validatedCal.id === undefined) validatedCal.id = Date.now();
@@ -157,3 +158,30 @@ export const LocalStorageCorrection = () => {
     }
   }
 };
+
+const dayCheck = (days: any) => {
+  if (typeof days[0].completed === "object") return
+  // const allowedDayKeys = [
+  //   "completed",
+  //   "day",
+  //   "timestamp"
+  // ];
+  // Object.keys(days).forEach((key) => {
+  //         if (typeof d.completed !== "object") {
+            
+  //         }
+  //       });
+  const newDays = days.map((d: any) => {
+    if (d.completed === "yes") {
+      return {...d, goal :{
+        completed: "yes"
+      }
+    }}
+    else {
+      return {...d, goal :{
+        completed: "no"
+      }}
+    }
+  })
+  return newDays;
+}
