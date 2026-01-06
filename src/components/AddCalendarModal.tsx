@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { addCalendar, setACM, setHType, setHFormat, setHTarget } from '../redux/generalSlice';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { IoIosAddCircleOutline } from 'react-icons/io';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,6 +10,11 @@ export const AddCalendarModal = () => {
   const { ACM, hType, hFormat, hTarget } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(() => {
+    dispatch(setACM(false));
+    dispatch(setHTarget(0));
+  }, ACM);
 
   useClickOutside({
     ref: modalRef,

@@ -53,6 +53,10 @@ export const generalSlice = createSlice({
         toast.error("Target cannot be negative or zero!");
         return;
       }
+      if (state.hTarget.toString().length >= 3 || state.hTarget > 999) {
+        toast.error("Target cannot be greater than 999");
+        return;
+      }
       if (state.calendars.length < 10) {
         state.calendars.push({
           id: Date.now(),

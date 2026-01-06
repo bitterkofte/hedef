@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { setNIM, setEditingDay, updatePerformed } from '../redux/generalSlice';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoMdClose, IoMdCheckmark } from 'react-icons/io';
 import { dateFormatter } from '../utils/functions';
+import { toast } from 'sonner';
 
 export const NumberInputModal = () => {
   const { NIM, editingDay, calendars, selectedCalendar } = useAppSelector((s) => s.general);
@@ -15,6 +17,11 @@ export const NumberInputModal = () => {
   const currentDayData = editingDay !== null 
     ? calendars[selectedCalendar].calendar.find(d => d.day === editingDay)
     : null;
+
+  useEscapeKey(() => {
+    dispatch(setNIM(false));
+    dispatch(setEditingDay(null));
+  }, NIM);
 
   useEffect(() => {
     if (NIM && currentDayData) {
@@ -44,6 +51,10 @@ export const NumberInputModal = () => {
   };
 
   const appendNumber = (num: string) => {
+    if (num !== "AC" && num !== "DEL" && value.length >= 3) {
+      toast.error("Number cannot be greater than 999");
+      return
+    }
     setValue(prev => {
       if (prev === "0") return num;
       // Limit to a reasonable length, e.g., 6 digits
@@ -74,7 +85,7 @@ export const NumberInputModal = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: 0.3 } }}
           exit={{ opacity: 0, transition: { duration: 0.4 } }}
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-md"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-md select-none"
         >
           <motion.div
             ref={modalRef}

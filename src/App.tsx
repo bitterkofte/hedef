@@ -2,10 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { dateFormatter, isToday, dayViewHandler } from "./utils/functions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useClickOutside } from "./hooks/useClickOutside";
+import { useEscapeKey } from "./hooks/useEscapeKey";
 import { Tooltip } from "react-tooltip";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import {
-  addCalendar,
   completeDaily,
   deleteSelectedCalendar,
   setSelectedCalendar,
@@ -33,7 +33,7 @@ import { dayStyles, dayProgressStyle } from "./styles";
 
 function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
-  const { calendars, selectedCalendar, isPastLocked, view, ACM, NIM, hType, hFormat } = useAppSelector(
+  const { calendars, selectedCalendar, isPastLocked, view, ACM, NIM } = useAppSelector(
     (s) => s.general
   );
   const dispatch = useAppDispatch();
@@ -45,6 +45,8 @@ function App() {
     ref: deleteModalRef,
     handler: () => setIsModalVisible(false),
   });
+
+  useEscapeKey(() => setIsModalVisible(false), isModalVisible);
 
   useEffect(() => {
     if (isModalVisible || ACM || NIM) {
@@ -85,6 +87,26 @@ function App() {
       }
     }
   };
+
+  const handleSwipe = (day: any, calendar: any, info: any) => {
+    if (window.innerWidth >= 768 || calendar.habitFormat !== "time") return;
+
+    if (
+      isPastLocked &&
+      day.timestamp < currentTimestamp &&
+      !isToday(day.timestamp, currentTimestamp)
+    ) {
+      return;
+    }
+
+    const threshold = 20;
+    if (info.offset.y < -threshold) {
+      completeHandler(day.day, calendar, 0); // Increase
+    } else if (info.offset.y > threshold) {
+      completeHandler(day.day, calendar, 2); // Decrease
+    }
+  };
+
 
   const deleteHandler = (i: number) => {
     dispatch(setSelectedCalendar(i));
@@ -328,13 +350,14 @@ function App() {
 
                     {/* Days */}
                     {monthDays.map((day) => (
-                      <button
+                      <motion.button
                         key={day.day}
                         id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
                         className={dayStyles(isPastLocked, day, currentTimestamp, selCal)}
                         data-tooltip-id="date"
                         data-tooltip-content={dateFormatter(day.timestamp)}
                         data-tooltip-place="top"
+                        onPanEnd={(_, info) => handleSwipe(day, selCal, info)}
                         onContextMenu={(e) => {
                           if (selCal.habitFormat === "time") e.preventDefault();
                         }}
@@ -373,7 +396,7 @@ function App() {
                           />
                         )}
                         <span className="relative z-10">{dayViewHandler(selCal, day, currentTimestamp)}</span>
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -388,13 +411,14 @@ function App() {
         {view === "list" && (
           <div id="calendar" className="w-full grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-3 md:px-20 px-5">
             {calendars[selectedCalendar].calendar.map((day) => (
-              <button
+              <motion.button
                 key={day.day}
                 id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
                 className={dayStyles(isPastLocked, day, currentTimestamp, calendars[selectedCalendar])}
                 data-tooltip-id="date"
                 data-tooltip-content={dateFormatter(day.timestamp)}
                 data-tooltip-place="top"
+                onPanEnd={(_, info) => handleSwipe(day, calendars[selectedCalendar], info)}
                 onContextMenu={(e) => {
                   if (calendars[selectedCalendar].habitFormat === "time") e.preventDefault();
                 }}
@@ -434,7 +458,7 @@ function App() {
                   />
                 )}
                 <span className="relative z-10">{dayViewHandler(calendars[selectedCalendar], day, currentTimestamp)}</span>
-              </button>
+              </motion.button>
             ))}
             <Tooltip id="date" className="tooltip" border="1px solid #8c6000" style={{ borderRadius: 9 }} />
           </div>
