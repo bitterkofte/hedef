@@ -93,8 +93,9 @@ function App() {
 
     if (
       isPastLocked &&
-      day.timestamp < currentTimestamp &&
-      !isToday(day.timestamp, currentTimestamp)
+      
+      !isToday(day.timestamp, currentTimestamp) || 
+      day.timestamp > currentTimestamp 
     ) {
       return;
     }
@@ -387,6 +388,7 @@ function App() {
                           }
                           completeHandler(day.day, selCal, 0);
                         }}
+                        style={{ touchAction: selCal.habitFormat === 'time' ? 'none' : 'auto' }}
                         disabled={day.timestamp > currentTimestamp}
                       >
                         {(selCal.habitFormat === "number" || selCal.habitFormat === "time") && (
@@ -449,6 +451,7 @@ function App() {
                   }
                   completeHandler(day.day, calendars[selectedCalendar], 0);
                 }}
+                style={{ touchAction: calendars[selectedCalendar].habitFormat === 'time' ? 'none' : 'auto' }}
                 disabled={day.timestamp > currentTimestamp}
               >
                 {(calendars[selectedCalendar].habitFormat === "number" || calendars[selectedCalendar].habitFormat === "time") && (
