@@ -15,8 +15,13 @@ import {
   setACM,
   setEditingDay,
   setNIM,
+  setSettingsOpen,
   updatePerformed,
+  setAccountOpen,
 } from "./redux/generalSlice";
+import { fetchAllFromPB } from "./redux/fetchThunks";
+import { pb } from "./lib/pocketbase";
+
 import { Settings } from "./components/Settings";
 import { AddCalendarModal } from "./components/AddCalendarModal";
 import { NumberInputModal } from "./components/NumberInputModal";
@@ -26,6 +31,8 @@ import "driver.js/dist/driver.css";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { useHorizontalScroll } from "./hooks/useHorizontalScroll";
 import { MdAccountCircle } from "react-icons/md";
+import { CloudStatus } from "./components/CloudStatus";
+import { AccountSidebar } from "./components/AccountSidebar";
 import Footer from "./components/Footer";
 import InfoGraph from "./components/InfoGraph";
 import { days } from "./utils/data";
@@ -33,9 +40,11 @@ import { dayStyles, dayProgressStyle } from "./styles";
 
 function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(Date.now());
-  const { calendars, selectedCalendar, isPastLocked, view, ACM, NIM } = useAppSelector(
+  const { calendars, selectedCalendar, isPastLocked, view, ACM, NIM, cloudSyncStatus } = useAppSelector(
     (s) => s.general
   );
+
+  const currentCalendar = calendars[selectedCalendar] || calendars[0];
   const dispatch = useAppDispatch();
   const scrollHorRef = useHorizontalScroll();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -59,6 +68,8 @@ function App() {
     };
   }, [isModalVisible, ACM, NIM]);
 
+  if (!currentCalendar) return null;
+
   useEffect(() => {
     const intervalId = setInterval(
       () => setCurrentTimestamp(Date.now()),
@@ -67,6 +78,25 @@ function App() {
     console.log(Date.now());
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (pb.authStore.isValid) {
+      dispatch(fetchAllFromPB());
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // If idle means unsynced changes exist
+      if (cloudSyncStatus === "idle" && pb.authStore.isValid) {
+        e.preventDefault();
+        e.returnValue = ""; // Required for Chrome
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [cloudSyncStatus]);
 
   const completeHandler = (day: number, calendar: any, button: number = 0) => {
     if (calendar.habitFormat === "check") {
@@ -93,7 +123,6 @@ function App() {
 
     if (
       isPastLocked &&
-      
       !isToday(day.timestamp, currentTimestamp) || 
       day.timestamp > currentTimestamp 
     ) {
@@ -236,10 +265,17 @@ function App() {
           </svg>
         </button>
         <img className="w-40 lg:w-72 py-7" id="logo" src={Logo} alt="hedef" />
-        <MdAccountCircle
-          size={40}
-          className="cursor-pointer"
-        />
+        <div className="flex items-center gap-4">
+          <CloudStatus />
+          <MdAccountCircle
+            size={40}
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(setAccountOpen(true));
+            }}
+          />
+        </div>
       </nav>
 
       <div
@@ -279,7 +315,7 @@ function App() {
             type="text"
             id="task-title"
             className="w-fit bg-transparent text-2xl font-bold text-center outline-none"
-            value={calendars[selectedCalendar].title}
+            value={currentCalendar.title}
             onChange={(e) => dispatch(updateTitle(e.target.value))}
             placeholder="Goal"
             maxLength={20}
@@ -288,7 +324,7 @@ function App() {
             type="text"
             id="task-desc"
             className="w-fit bg-transparent text-sm font-light text-center opacity-30 outline-none"
-            value={calendars[selectedCalendar].description || ""}
+            value={currentCalendar.description || ""}
             onChange={(e) => dispatch(updateDescription(e.target.value))}
             placeholder="description"
             maxLength={20}
@@ -300,7 +336,7 @@ function App() {
           </p> */}
           {/* <div className="flex items-center gap-2">
             <p className="text-sm text-gold">{calendars[selectedCalendar].habitFormat} - </p>
-            <p className="text-sm text-gold">{calendars[selectedCalendar].target}</p>
+            <p className="text-sm text-gold">{calendars[100
           </div> */}
         </div>
 
@@ -308,8 +344,8 @@ function App() {
         {view === "grid" && (
           <div id="calendar" className="px-5 sm:px-3 md:px-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {Array.from({ length: 12 }).map((_, monthIndex) => {
-              const selCal = calendars[selectedCalendar];
-              const currentCalendarData = calendars[selectedCalendar].calendar;
+              const selCal = currentCalendar;
+              const currentCalendarData = currentCalendar.calendar;
               // console.log('currentCalendarData: ', currentCalendarData)
               const monthDays = currentCalendarData.filter(
                 (day) => new Date(day.timestamp).getMonth() === monthIndex
@@ -388,7 +424,7 @@ function App() {
                           }
                           completeHandler(day.day, selCal, 0);
                         }}
-                        style={{ touchAction: selCal.habitFormat === 'time' ? 'none' : 'auto' }}
+                        style={{ touchAction: selCal.habitFormat === 'time' && (!isPastLocked && day.timestamp < currentTimestamp && !isToday(day.timestamp, currentTimestamp)) ? 'none' : 'auto' }}
                         disabled={day.timestamp > currentTimestamp}
                       >
                         {(selCal.habitFormat === "number" || selCal.habitFormat === "time") && (
@@ -412,20 +448,20 @@ function App() {
         {/* <div className="flex flex-wrap gap-3 md:px-20 px-5"> */}
         {view === "list" && (
           <div id="calendar" className="w-full grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-3 md:px-20 px-5">
-            {calendars[selectedCalendar].calendar.map((day) => (
+            {currentCalendar.calendar.map((day) => (
               <motion.button
                 key={day.day}
                 id={isToday(day.timestamp, currentTimestamp) ? "today" : ""}
-                className={dayStyles(isPastLocked, day, currentTimestamp, calendars[selectedCalendar])}
+                className={dayStyles(isPastLocked, day, currentTimestamp, currentCalendar)}
                 data-tooltip-id="date"
                 data-tooltip-content={dateFormatter(day.timestamp)}
                 data-tooltip-place="top"
-                onPanEnd={(_, info) => handleSwipe(day, calendars[selectedCalendar], info)}
+                onPanEnd={(_, info) => handleSwipe(day, currentCalendar, info)}
                 onContextMenu={(e) => {
-                  if (calendars[selectedCalendar].habitFormat === "time") e.preventDefault();
+                  if (currentCalendar.habitFormat === "time") e.preventDefault();
                 }}
                 onMouseDown={(e) => {
-                  const selCal = calendars[selectedCalendar];
+                  const selCal = currentCalendar;
                   if (
                     e.button === 2 &&
                     selCal.habitFormat === "time"
@@ -449,18 +485,18 @@ function App() {
                   ) {
                     return;
                   }
-                  completeHandler(day.day, calendars[selectedCalendar], 0);
+                  completeHandler(day.day, currentCalendar, 0);
                 }}
-                style={{ touchAction: calendars[selectedCalendar].habitFormat === 'time' ? 'none' : 'auto' }}
+                style={{ touchAction: currentCalendar.habitFormat === 'time' ? 'none' : 'auto' }}
                 disabled={day.timestamp > currentTimestamp}
               >
-                {(calendars[selectedCalendar].habitFormat === "number" || calendars[selectedCalendar].habitFormat === "time") && (
+                {(currentCalendar.habitFormat === "number" || currentCalendar.habitFormat === "time") && (
                   <div 
                     className="absolute bottom-0 left-0 w-full transition-all duration-300 ease-in-out pointer-events-none"
-                    style={dayProgressStyle(day, calendars[selectedCalendar])}
+                    style={dayProgressStyle(day, currentCalendar)}
                   />
                 )}
-                <span className="relative z-10">{dayViewHandler(calendars[selectedCalendar], day, currentTimestamp)}</span>
+                <span className="relative z-10">{dayViewHandler(currentCalendar, day, currentTimestamp)}</span>
               </motion.button>
             ))}
             <Tooltip id="date" className="tooltip" border="1px solid #8c6000" style={{ borderRadius: 9 }} />
@@ -471,6 +507,7 @@ function App() {
       <AddCalendarModal />
       <NumberInputModal />
       <Settings setIsModalVisible={setIsModalVisible} />
+      <AccountSidebar />
       <InfoGraph />
       <Footer />
     </>

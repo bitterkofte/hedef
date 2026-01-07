@@ -14,8 +14,9 @@ export const NumberInputModal = () => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState<string>("0");
 
-  const currentDayData = editingDay !== null 
-    ? calendars[selectedCalendar].calendar.find(d => d.day === editingDay)
+  const currentCalendar = calendars[selectedCalendar] || calendars[0];
+  const currentDayData = (editingDay !== null && currentCalendar)
+    ? currentCalendar.calendar.find(d => d.day === editingDay)
     : null;
 
   useEscapeKey(() => {

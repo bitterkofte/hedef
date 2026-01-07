@@ -8,6 +8,9 @@ import {
 } from "../utils/functions";
 import { toast } from "sonner";
 import { CalendarType } from "../types";
+import { pushCalendarsToPB } from "./pbThunks";
+import { fetchAllFromPB } from "./fetchThunks";
+
 
 LocalStorageCorrection();
 
@@ -23,17 +26,25 @@ export interface GeneralStateType {
   hFormat: "check" | "number" | "time";
   hTarget: number;
   isSettingsOpen: boolean;
+  isAccountOpen: boolean;
+  cloudSyncStatus: "idle" | "loading" | "error" | "success";
 }
 
+const storedCalendars = JSON.parse(localStorage.getItem("calendars") || "null");
+const calendars = Array.isArray(storedCalendars) && storedCalendars.length > 0 
+  ? storedCalendars 
+  : [initialCalendar];
+
+const storedSettings = JSON.parse(localStorage.getItem("settings") || "{}");
+const selectedCalendar = (typeof storedSettings.selectedCalendar === "number" && storedSettings.selectedCalendar >= 0 && storedSettings.selectedCalendar < calendars.length)
+  ? storedSettings.selectedCalendar
+  : 0;
+
 const initialState: GeneralStateType = {
-  calendars: JSON.parse(localStorage.getItem("calendars") || "null") || [
-    initialCalendar,
-  ],
-  selectedCalendar:
-    JSON.parse(localStorage.getItem("settings") || "{}").selectedCalendar ?? 0,
-  isPastLocked:
-    JSON.parse(localStorage.getItem("settings") || "{}").isPastLocked ?? true,
-  view: JSON.parse(localStorage.getItem("settings") || "{}").view ?? "grid",
+  calendars,
+  selectedCalendar,
+  isPastLocked: storedSettings.isPastLocked ?? true,
+  view: storedSettings.view ?? "grid",
   ACM: false,
   NIM: false,
   editingDay: null,
@@ -41,6 +52,8 @@ const initialState: GeneralStateType = {
   hFormat: "check",
   hTarget: 0,
   isSettingsOpen: false,
+  isAccountOpen: false,
+  cloudSyncStatus: "idle",
 };
 
 // SECTION SLICE
@@ -68,6 +81,7 @@ export const generalSlice = createSlice({
           target: state.hFormat === "check" ? 0 : state.hTarget,
         });
         state.ACM = false;
+        state.cloudSyncStatus = "idle";
         localSetItem("calendars", state.calendars);
         localSetItem("settings", {
           selectedCalendar: state.calendars.length - 1,
@@ -83,6 +97,9 @@ export const generalSlice = createSlice({
     },
     setSettingsOpen: (state, action: PayloadAction<boolean>) => {
       state.isSettingsOpen = action.payload;
+    },
+    setAccountOpen: (state, action: PayloadAction<boolean>) => {
+      state.isAccountOpen = action.payload;
     },
     setEditingDay: (state, action: PayloadAction<number | null>) => {
       state.editingDay = action.payload;
@@ -110,6 +127,7 @@ export const generalSlice = createSlice({
       if (dayIndex !== -1)
         state.calendars[calendarIndex].calendar[dayIndex].goal.completed =
           currentState !== "yes" ? "yes" : "no";
+      state.cloudSyncStatus = "idle";
       localSetItem("calendars", state.calendars);
     },
     updatePerformed: (
@@ -128,14 +146,17 @@ export const generalSlice = createSlice({
         state.calendars[calendarIndex].calendar[dayIndex].goal.completed =
           performed >= target ? "yes" : "no";
       }
+      state.cloudSyncStatus = "idle";
       localSetItem("calendars", state.calendars);
     },
     updateTitle: (state, action: PayloadAction<string>) => {
       state.calendars[state.selectedCalendar].title = action.payload;
+      state.cloudSyncStatus = "idle";
       localStorage.setItem("calendars", JSON.stringify(state.calendars));
     },
     updateDescription: (state, action: PayloadAction<string>) => {
       state.calendars[state.selectedCalendar].description = action.payload;
+      state.cloudSyncStatus = "idle";
       localStorage.setItem("calendars", JSON.stringify(state.calendars));
     },
     deleteCalendar: (state) => {
@@ -144,6 +165,7 @@ export const generalSlice = createSlice({
           (_, i) => i !== state.selectedCalendar
         );
         state.selectedCalendar = 0;
+        state.cloudSyncStatus = "idle";
         localStorage.setItem("calendars", JSON.stringify(state.calendars));
         localStorage.setItem(
           "settings",
@@ -155,6 +177,7 @@ export const generalSlice = createSlice({
       const wheeled = action.payload;
       if (state.calendars.length > 1) {
         state.calendars = state.calendars.filter((_, i) => i !== wheeled);
+        state.cloudSyncStatus = "idle";
         localStorage.setItem("calendars", JSON.stringify(state.calendars));
         if (
           (state.selectedCalendar === wheeled &&
@@ -168,13 +191,57 @@ export const generalSlice = createSlice({
     },
     togglePastLocked: (state) => {
       state.isPastLocked = !state.isPastLocked;
+      state.cloudSyncStatus = "idle";
       localSetItem("settings", { isPastLocked: state.isPastLocked });
     },
     toggleView: (state) => {
       state.view = state.view === "grid" ? "list" : "grid";
+      state.cloudSyncStatus = "idle";
       localSetItem("settings", { view: state.view });
     },
+    setCloudSyncStatus: (state, action: PayloadAction<GeneralStateType["cloudSyncStatus"]>) => {
+      state.cloudSyncStatus = action.payload;
+    },
+    logout: (state) => {
+      localStorage.removeItem("calendars");
+      localStorage.removeItem("settings");
+      state.calendars = [initialCalendar];
+      state.selectedCalendar = 0;
+      state.isPastLocked = true;
+      state.view = "grid";
+      state.cloudSyncStatus = "idle";
+    }
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(pushCalendarsToPB.pending, (state) => {
+        state.cloudSyncStatus = "loading";
+      })
+      .addCase(pushCalendarsToPB.fulfilled, (state) => {
+        state.cloudSyncStatus = "success";
+      })
+      .addCase(pushCalendarsToPB.rejected, (state) => {
+        state.cloudSyncStatus = "error";
+      })
+      .addCase(fetchAllFromPB.fulfilled, (state, action) => {
+        if (action.payload.calendars.length > 0) {
+          state.calendars = action.payload.calendars;
+          localSetItem("calendars", state.calendars); // Sync local cache
+        }
+        if (action.payload.settings) {
+          const s = action.payload.settings;
+          if (s.selectedCalendar !== undefined) state.selectedCalendar = s.selectedCalendar;
+          if (s.isPastLocked !== undefined) state.isPastLocked = s.isPastLocked;
+          if (s.view !== undefined) state.view = s.view;
+          localSetItem("settings", { 
+            selectedCalendar: state.selectedCalendar,
+            isPastLocked: state.isPastLocked,
+            view: state.view
+          }); // Sync local cache
+        }
+        state.cloudSyncStatus = "success";
+      });
+  }
 });
 
 export const {
@@ -191,10 +258,13 @@ export const {
   setACM,
   setNIM,
   setSettingsOpen,
+  setAccountOpen,
   setEditingDay,
   updatePerformed,
   setHType,
   setHFormat,
   setHTarget,
+  setCloudSyncStatus,
+  logout,
 } = generalSlice.actions;
 export default generalSlice.reducer;

@@ -8,14 +8,13 @@ import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import { Loading } from "./Loading";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { deleteCalendar, toggleDayZero, togglePastLocked, setSettingsOpen } from "../redux/generalSlice";
-import { IoIosAddCircleOutline } from "react-icons/io";
+import { togglePastLocked, setSettingsOpen } from "../redux/generalSlice";
 import { IoLockClosedOutline, IoLockOpenOutline, IoTrashOutline } from "react-icons/io5";
 
 export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean) => void }) => {
   const [isExporting, setIsExporting] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const { calendars, selectedCalendar, isPastLocked, isSettingsOpen } = useAppSelector((s) => s.general);
+  const { isPastLocked, isSettingsOpen } = useAppSelector((s) => s.general);
   const dispatch = useAppDispatch();
 
   useClickOutside({
@@ -23,7 +22,6 @@ export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean
     handler: () => dispatch(setSettingsOpen(false)),
   });
 
-  const isDayZero = !!calendars[selectedCalendar].calendar.find(d => d.day === 0)
 
   const exportCalendarImage = async () => {
     setIsExporting(true);
@@ -37,7 +35,10 @@ export const Settings = ({ setIsModalVisible }: { setIsModalVisible: (s: boolean
     setIsExporting(false);
   };
 
-  const toggleSettings = () => dispatch(setSettingsOpen(!isSettingsOpen));
+  const toggleSettings = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch(setSettingsOpen(!isSettingsOpen));
+  };
   return (
     <div
     id="settings"
